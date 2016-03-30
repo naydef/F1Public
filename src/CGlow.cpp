@@ -11,9 +11,10 @@
 
 // these are some HORRIBLE MACROS
 // one of the worst things i have ever done
-#define REDCOLORFLOAT (float)0.490000, (float)0.660000, (float)0.770000
-#define BLUCOLORFLOAT (float)0.740000, (float)0.230000, (float)0.230000
+#define REDCOLORFLOAT 0.490000f, 0.660000f, 0.770000f
+#define BLUCOLORFLOAT 0.740000f, 0.230000f, 0.230000f
 
+/*
 Color healthToColor(int health, int maxHealth)
 {
 	int r = 0, g = 0, b = 0;
@@ -32,6 +33,7 @@ Color healthToColor(int health, int maxHealth)
 
 	return Color{r, g, b, 255};
 }
+*/
 
 int CGlow::registerGlowObject(CBaseEntity *ent, float r, float g, float b, float a, bool bRenderWhenOccluded, bool bRenderWhenUnoccluded, int nSplitScreenSlot)
 {
@@ -64,7 +66,8 @@ bool CGlow::paint()
 {
 	if(variables[2].bGet() || !variables[0].bGet())
 		return true;
-
+	
+	/*
 	for(auto &glowObj : pGlowObjectManger->glowObjects)
 	{
 		if(glowObj.hEntity != -1)
@@ -87,7 +90,7 @@ bool CGlow::paint()
 			//Log::Console("team %d: %f %f %f", ent.get<int>(gEntVars.iTeam), glowObj.r, glowObj.g, glowObj.b);
 		}
 	}
-
+	*/
 	return true;
 }
 
