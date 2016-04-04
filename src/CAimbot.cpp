@@ -172,56 +172,64 @@ void CAimbot::aim(CUserCmd *pUserCmd)
 
 	if(local.get<BYTE>(gEntVars.iLifeState) != LIFE_ALIVE)
 		return;
-
-	if(gLocalPlayerVars.Class == TF2_Sniper)
+		
+	// if we manually attack, ALWAYS aim and attack
+	if(!(pUserCmd->buttons & IN_ATTACK))
 	{
-		if(gLocalPlayerVars.cond & tf_cond::TFCond_Zoomed)
+
+		if(variables[8].bGet())
+			return;
+
+		if(gLocalPlayerVars.Class == TF2_Sniper)
 		{
-			float damage = localWeapon.get<float>(gEntVars.flChargedDamage);
-			// minium charge to be able to headshot
-			if(damage < variables[4].fGet())
+			if(gLocalPlayerVars.cond & tf_cond::TFCond_Zoomed)
 			{
-				return;
+				float damage = localWeapon.get<float>(gEntVars.flChargedDamage);
+				// minium charge to be able to headshot
+				if(damage < variables[4].fGet())
+				{
+					return;
+				}
+				// respect zoom damage
+				if(variables[3].bGet() && ZOOM_BASE_DAMAGE + damage < other.get<int>(gEntVars.iHealth))
+				{
+					return;
+				}
 			}
-			// respect zoom damage
-			if(variables[3].bGet() && ZOOM_BASE_DAMAGE + damage < other.get<int>(gEntVars.iHealth))
+			else
 			{
-				return;
+				if(variables[2].bGet())
+				{
+					return;
+				}
 			}
 		}
-		else
+		else if(gLocalPlayerVars.Class == TF2_Spy)
 		{
-			if(variables[2].bGet())
+			if(gLocalPlayerVars.activeWeapon == classId::CTFRevolver)
 			{
-				return;
+				CTFBaseWeaponGun *tfWeap = localWeapon.castToPointer<CTFBaseWeaponGun>();
+	
+				float spread = tfWeap->WeaponGetSpread();
+	
+				//Log::Console("%f", spread);
+	
+				if(spread > 0)
+					return;
 			}
-		}
-	}
-	else if(gLocalPlayerVars.Class == TF2_Spy)
-	{
-		if(gLocalPlayerVars.activeWeapon == classId::CTFRevolver)
-		{
-			CTFBaseWeaponGun *tfWeap = localWeapon.castToPointer<CTFBaseWeaponGun>();
-
-			float spread = tfWeap->WeaponGetSpread();
-
-			//Log::Console("%f", spread);
-
-			if(spread > 0)
-				return;
+			else
+			{
+				// if we cant fire, dont aim (bullettime is a little backwards)
+				if(bulletTime(local, true))
+					return;
+			}
 		}
 		else
 		{
 			// if we cant fire, dont aim (bullettime is a little backwards)
-			if(bulletTime(local, true))
-				return;
+			//if(bulletTime(local, true))
+			//	return;
 		}
-	}
-	else
-	{
-		// if we cant fire, dont aim (bullettime is a little backwards)
-		//if(bulletTime(local, true))
-		//	return;
 	}
 
 	Vector hit = getHitBoxVector(other);
@@ -231,8 +239,8 @@ void CAimbot::aim(CUserCmd *pUserCmd)
 
 	ClampAngle(angles);
 
-	if(variables[8].bGet() && !(pUserCmd->buttons & IN_ATTACK))
-		return;
+	//if(variables[8].bGet() && !(pUserCmd->buttons & IN_ATTACK))
+	//	return;
 
 	//Vector oldView = pUserCmd->viewangles;
 
