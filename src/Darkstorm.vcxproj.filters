@@ -68,6 +68,9 @@
     <ClCompile Include="CHackState.cpp">
       <Filter>Hack\other\hack state</Filter>
     </ClCompile>
+    <ClCompile Include="backtrace.cpp">
+      <Filter>SDK\backtrace</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CHack.h">
@@ -193,9 +196,6 @@
     <ClInclude Include="CUtlMemory.h">
       <Filter>SDK\Source\Utl stuff</Filter>
     </ClInclude>
-    <ClInclude Include="backtrace.h">
-      <Filter>SDK</Filter>
-    </ClInclude>
     <ClInclude Include="CUtlMemoryPool.h">
       <Filter>SDK\Source\Utl stuff</Filter>
     </ClInclude>
@@ -216,6 +216,9 @@
     </ClInclude>
     <ClInclude Include="notNullInterface.h">
       <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="backtrace.h">
+      <Filter>SDK\backtrace</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -314,6 +317,9 @@
     </Filter>
     <Filter Include="Hack\other\hack state">
       <UniqueIdentifier>{00c268e4-9e59-492b-b6cd-6967eaf78f6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\backtrace">
+      <UniqueIdentifier>{2b9c3a22-bee8-4704-9249-74043fc5dc70}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
