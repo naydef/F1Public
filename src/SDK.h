@@ -33,9 +33,9 @@ using CHandle = int;
 
 // useless here?
 
-#pragma optimize( "gsy", on )
-#pragma warning( disable : 4244 )		  //Possible loss of data
-#pragma comment( lib, "steamclient.lib" ) // use steamclient as thats where we are getting createinterface from!
+#pragma optimize("gsy", on)
+#pragma warning(disable : 4244)			//Possible loss of data
+#pragma comment(lib, "steamclient.lib") // use steamclient as thats where we are getting createinterface from!
 
 typedef float matrix3x4[3][4];
 //===================================================================================================
@@ -44,14 +44,14 @@ typedef float matrix3x4[3][4];
 #define CONTENTS_HITBOX 0x40000000
 #define CH_MASK 0x4600400B
 #define PI 3.14159265358979323846f
-#define square( x ) ( x * x )
+#define square(x) (x * x)
 #define RADPI 57.295779513082f
-#define SQUARE( a ) a *a
+#define SQUARE(a) a *a
 #define BLU_TEAM 3
 #define RED_TEAM 2
-#define FL_ONGROUND ( 1 << 0 )
-#define FL_DUCKING ( 1 << 1 )
-#define HANDLE2INDEX( handle ) ( handle & 0xFFF )
+#define FL_ONGROUND (1 << 0)
+#define FL_DUCKING (1 << 1)
+#define HANDLE2INDEX(handle) (handle & 0xFFF)
 //===================================================================================================
 typedef struct player_info_s
 {
@@ -98,33 +98,33 @@ public:
 		command_number = 0;
 		tick_count = 0;
 		viewangles.Init();
-		forwardmove = 0.0f;
-		sidemove = 0.0f;
-		upmove = 0.0f;
-		buttons = 0;
-		impulse = 0;
-		weaponselect = 0;
-		weaponsubtype = 0;
-		random_seed = 0;
-		mousedx = 0;
-		mousedy = 0;
+		forwardmove	  = 0.0f;
+		sidemove		 = 0.0f;
+		upmove		   = 0.0f;
+		buttons		  = 0;
+		impulse		  = 0;
+		weaponselect	 = 0;
+		weaponsubtype	= 0;
+		random_seed	  = 0;
+		mousedx		  = 0;
+		mousedy		  = 0;
 		hasbeenpredicted = false;
 	}
-	virtual ~CUserCmd() {}; //Destructor 0
-	int command_number;		//4
-	int tick_count;			//8
-	Vector viewangles;		//C
-	float forwardmove;		//18
-	float sidemove;			//1C
-	float upmove;			//20
-	int buttons;			//24
-	BYTE impulse;			//28
-	int weaponselect;		//2C
-	int weaponsubtype;		//30
-	int random_seed;		//34
-	short mousedx;			//38
-	short mousedy;			//3A
-	bool hasbeenpredicted;  //3C;
+	virtual ~CUserCmd(){}; //Destructor 0
+	int command_number;	//4
+	int tick_count;		   //8
+	Vector viewangles;	 //C
+	float forwardmove;	 //18
+	float sidemove;		   //1C
+	float upmove;		   //20
+	int buttons;		   //24
+	BYTE impulse;		   //28
+	int weaponselect;	  //2C
+	int weaponsubtype;	 //30
+	int random_seed;	   //34
+	short mousedx;		   //38
+	short mousedy;		   //3A
+	bool hasbeenpredicted; //3C;
 };
 //===================================================================================================
 class CVerifiedUserCmd
@@ -234,60 +234,59 @@ public:
 class INetChannelInfo
 {
 public:
-
 	enum
 	{
-		GENERIC = 0,	// must be first and is default group
-		LOCALPLAYER,	// bytes for local player entity update
-		OTHERPLAYERS,	// bytes for other players update
-		ENTITIES,		// all other entity bytes
-		SOUNDS,			// game sounds
-		EVENTS,			// event messages
-		USERMESSAGES,	// user messages
-		ENTMESSAGES,	// entity messages
-		VOICE,			// voice data
-		STRINGTABLE,	// a stringtable update
-		MOVE,			// client move cmds
-		STRINGCMD,		// string command
-		SIGNON,			// various signondata
-		TOTAL,			// must be last and is not a real group
+		GENERIC = 0,  // must be first and is default group
+		LOCALPLAYER,  // bytes for local player entity update
+		OTHERPLAYERS, // bytes for other players update
+		ENTITIES,	 // all other entity bytes
+		SOUNDS,		  // game sounds
+		EVENTS,		  // event messages
+		USERMESSAGES, // user messages
+		ENTMESSAGES,  // entity messages
+		VOICE,		  // voice data
+		STRINGTABLE,  // a stringtable update
+		MOVE,		  // client move cmds
+		STRINGCMD,	// string command
+		SIGNON,		  // various signondata
+		TOTAL,		  // must be last and is not a real group
 	};
 
-	virtual const char  *GetName(void) const = 0;	// get channel name
-	virtual const char  *GetAddress(void) const = 0; // get channel IP address as string
-	virtual float		GetTime(void) const = 0;	// current net time
-	virtual float		GetTimeConnected(void) const = 0;	// get connection time in seconds
-	virtual int			GetBufferSize(void) const = 0;	// netchannel packet history size
-	virtual int			GetDataRate(void) const = 0; // send data rate in byte/sec
+	virtual const char *GetName(void) const = 0;	// get channel name
+	virtual const char *GetAddress(void) const = 0; // get channel IP address as string
+	virtual float GetTime(void) const = 0;			// current net time
+	virtual float GetTimeConnected(void) const = 0; // get connection time in seconds
+	virtual int GetBufferSize(void) const = 0;		// netchannel packet history size
+	virtual int GetDataRate(void) const = 0;		// send data rate in byte/sec
 
-	virtual bool		IsLoopback(void) const = 0;	// true if loopback channel
-	virtual bool		IsTimingOut(void) const = 0;	// true if timing out
-	virtual bool		IsPlayback(void) const = 0;	// true if demo playback
+	virtual bool IsLoopback(void) const = 0;  // true if loopback channel
+	virtual bool IsTimingOut(void) const = 0; // true if timing out
+	virtual bool IsPlayback(void) const = 0;  // true if demo playback
 
-	virtual float		GetLatency(int flow) const = 0;	 // current latency (RTT), more accurate but jittering
-	virtual float		GetAvgLatency(int flow) const = 0; // average packet latency in seconds
-	virtual float		GetAvgLoss(int flow) const = 0;	 // avg packet loss[0..1]
-	virtual float		GetAvgChoke(int flow) const = 0;	 // avg packet choke[0..1]
-	virtual float		GetAvgData(int flow) const = 0;	 // data flow in bytes/sec
-	virtual float		GetAvgPackets(int flow) const = 0; // avg packets/sec
-	virtual int			GetTotalData(int flow) const = 0;	 // total flow in/out in bytes
-	virtual int			GetSequenceNr(int flow) const = 0;	// last send seq number
-	virtual bool		IsValidPacket(int flow, int frame_number) const = 0; // true if packet was not lost/dropped/chocked/flushed
-	virtual float		GetPacketTime(int flow, int frame_number) const = 0; // time when packet was send
-	virtual int			GetPacketBytes(int flow, int frame_number, int group) const = 0; // group size of this packet
-	virtual bool		GetStreamProgress(int flow, int *received, int *total) const = 0;  // TCP progress if transmitting
-	virtual float		GetTimeSinceLastReceived(void) const = 0;	// get time since last recieved packet in seconds
-	virtual	float		GetCommandInterpolationAmount(int flow, int frame_number) const = 0;
-	virtual void		GetPacketResponseLatency(int flow, int frame_number, int *pnLatencyMsecs, int *pnChoke) const = 0;
-	virtual void		GetRemoteFramerate(float *pflFrameTime, float *pflFrameTimeStdDeviation) const = 0;
+	virtual float GetLatency(int flow) const = 0;								   // current latency (RTT), more accurate but jittering
+	virtual float GetAvgLatency(int flow) const = 0;							   // average packet latency in seconds
+	virtual float GetAvgLoss(int flow) const = 0;								   // avg packet loss[0..1]
+	virtual float GetAvgChoke(int flow) const = 0;								   // avg packet choke[0..1]
+	virtual float GetAvgData(int flow) const = 0;								   // data flow in bytes/sec
+	virtual float GetAvgPackets(int flow) const = 0;							   // avg packets/sec
+	virtual int GetTotalData(int flow) const = 0;								   // total flow in/out in bytes
+	virtual int GetSequenceNr(int flow) const = 0;								   // last send seq number
+	virtual bool IsValidPacket(int flow, int frame_number) const = 0;			   // true if packet was not lost/dropped/chocked/flushed
+	virtual float GetPacketTime(int flow, int frame_number) const = 0;			   // time when packet was send
+	virtual int GetPacketBytes(int flow, int frame_number, int group) const = 0;   // group size of this packet
+	virtual bool GetStreamProgress(int flow, int *received, int *total) const = 0; // TCP progress if transmitting
+	virtual float GetTimeSinceLastReceived(void) const = 0;						   // get time since last recieved packet in seconds
+	virtual float GetCommandInterpolationAmount(int flow, int frame_number) const = 0;
+	virtual void GetPacketResponseLatency(int flow, int frame_number, int *pnLatencyMsecs, int *pnChoke) const = 0;
+	virtual void GetRemoteFramerate(float *pflFrameTime, float *pflFrameTimeStdDeviation) const = 0;
 
-	virtual float		GetTimeoutSeconds() const = 0;
+	virtual float GetTimeoutSeconds() const = 0;
 };
 //===================================================================================================
 class EngineClient
 {
 public:
-		void GetScreenSize(int &width, int &height)
+	void GetScreenSize(int &width, int &height)
 	{
 
 		// call the engine function
@@ -306,7 +305,7 @@ public:
 			{
 				GetWindowRect(desktopWindow, &size);
 
-				width = size.right - size.left;
+				width  = size.right - size.left;
 				height = size.bottom - size.top;
 
 				//Log::Console("Right: %d, Left: %d", size.right, size.left);
@@ -543,12 +542,12 @@ public:
 	// tested
 	void UpdateGlowEffect()
 	{
-		typedef void(__thiscall *OriginalFn)(PVOID);
+		typedef void(__thiscall * OriginalFn)(PVOID);
 		return getvfunc<OriginalFn>(this, 226)(this);
 	}
 	void DestroyGlowEffect()
 	{
-		typedef void(__thiscall *OriginalFn)(PVOID);
+		typedef void(__thiscall * OriginalFn)(PVOID);
 		return getvfunc<OriginalFn>(this, 227)(this);
 	}
 };
@@ -622,133 +621,133 @@ public:
 //===================================================================================================
 enum playercontrols
 {
-	IN_ATTACK = (1 << 0),
-	IN_JUMP = (1 << 1),
-	IN_DUCK = (1 << 2),
-	IN_FORWARD = (1 << 3),
-	IN_BACK = (1 << 4),
-	IN_USE = (1 << 5),
-	IN_CANCEL = (1 << 6),
-	IN_LEFT = (1 << 7),
-	IN_RIGHT = (1 << 8),
-	IN_MOVELEFT = (1 << 9),
+	IN_ATTACK	= (1 << 0),
+	IN_JUMP	  = (1 << 1),
+	IN_DUCK	  = (1 << 2),
+	IN_FORWARD   = (1 << 3),
+	IN_BACK	  = (1 << 4),
+	IN_USE	   = (1 << 5),
+	IN_CANCEL	= (1 << 6),
+	IN_LEFT	  = (1 << 7),
+	IN_RIGHT	 = (1 << 8),
+	IN_MOVELEFT  = (1 << 9),
 	IN_MOVERIGHT = (1 << 10),
-	IN_ATTACK2 = (1 << 11),
-	IN_RUN = (1 << 12),
-	IN_RELOAD = (1 << 13),
-	IN_ALT1 = (1 << 14),
-	IN_ALT2 = (1 << 15),
-	IN_SCORE = (1 << 16),   // Used by client.dll for when scoreboard is held down
-	IN_SPEED = (1 << 17),   // Player is holding the speed key
-	IN_WALK = (1 << 18),	// Player holding walk key
-	IN_ZOOM = (1 << 19),	// Zoom key for HUD zoom
-	IN_WEAPON1 = (1 << 20), // weapon defines these bits
-	IN_WEAPON2 = (1 << 21), // weapon defines these bits
-	IN_BULLRUSH = (1 << 22),
+	IN_ATTACK2   = (1 << 11),
+	IN_RUN	   = (1 << 12),
+	IN_RELOAD	= (1 << 13),
+	IN_ALT1	  = (1 << 14),
+	IN_ALT2	  = (1 << 15),
+	IN_SCORE	 = (1 << 16), // Used by client.dll for when scoreboard is held down
+	IN_SPEED	 = (1 << 17), // Player is holding the speed key
+	IN_WALK	  = (1 << 18), // Player holding walk key
+	IN_ZOOM	  = (1 << 19), // Zoom key for HUD zoom
+	IN_WEAPON1   = (1 << 20), // weapon defines these bits
+	IN_WEAPON2   = (1 << 21), // weapon defines these bits
+	IN_BULLRUSH  = (1 << 22),
 };
 //===================================================================================================
 enum tf_cond : int
 {
-	TFCond_Slowed = (1 << 0),				  //Toggled when a player is slowed down.
-	TFCond_Zoomed = (1 << 1),				  //Toggled when a player is zoomed.
-	TFCond_Disguising = (1 << 2),			  //Toggled when a Spy is disguising.
-	TFCond_Disguised = (1 << 3),			  //Toggled when a Spy is disguised.
-	TFCond_Cloaked = (1 << 4),			  //Toggled when a Spy is invisible.
-	TFCond_Ubercharged = (1 << 5),		  //Toggled when a player is uberCharged.
-	TFCond_TeleportedGlow = (1 << 6),		  //Toggled when someone leaves a teleporter and has glow beneath their feet.
-	TFCond_Taunting = (1 << 7),			  //Toggled when a player is taunting.
-	TFCond_UberchargeFading = (1 << 8),	 //Toggled when the uberCharge is fading.
-	TFCond_CloakFlicker = (1 << 9),		  //Toggled when a Spy is visible during cloak.
-	TFCond_Teleporting = (1 << 10),		  //Only activates for a brief second when the player is being teleported; not very useful.
-	TFCond_Kritzkrieged = (1 << 11),		  //Toggled when a player is being crit buffed by the KritzKrieg.
-	TFCond_TmpDamageBonus = (1 << 12),	  //Unknown what this is for. Name taken from the AlliedModders SDK.
-	TFCond_DeadRingered = (1 << 13),		  //Toggled when a player is taking reduced damage from the Deadringer.
-	TFCond_Bonked = (1 << 14),			  //Toggled when a player is under the effects of The Bonk! Atomic Punch.
-	TFCond_Stunned = (1 << 15),			  //Toggled when a player's speed is reduced from airblast or a Sandman ball.
-	TFCond_Buffed = (1 << 16),			  //Toggled when a player is within range of an activated Buff Banner.
-	TFCond_Charging = (1 << 17),			  //Toggled when a Demoman charges with the shield.
-	TFCond_DemoBuff = (1 << 18),			  //Toggled when a Demoman has heads from the Eyelander.
-	TFCond_CritCola = (1 << 19),			  //Toggled when the player is under the effect of The Crit-a-Cola.
-	TFCond_InHealRadius = (1 << 20),		  //Unused condition, name taken from AlliedModders SDK.
-	TFCond_Healing = (1 << 21),			  //Toggled when someone is being healed by a medic or a dispenser.
-	TFCond_OnFire = (1 << 22),			  //Toggled when a player is on fire.
-	TFCond_Overhealed = (1 << 23),		  //Toggled when a player has >100% health.
-	TFCond_Jarated = (1 << 24),			  //Toggled when a player is hit with a Sniper's Jarate.
-	TFCond_Bleeding = (1 << 25),			  //Toggled when a player is taking bleeding damage.
-	TFCond_DefenseBuffed = (1 << 26),		  //Toggled when a player is within range of an activated Battalion's Backup.
-	TFCond_Milked = (1 << 27),			  //Player was hit with a jar of Mad Milk.
-	TFCond_MegaHeal = (1 << 28),			  //Player is under the effect of Quick-Fix charge.
-	TFCond_RegenBuffed = (1 << 29),		  //Toggled when a player is within a Concheror's range.
-	TFCond_MarkedForDeath = (1 << 30),	  //Player is marked for death by a Fan O'War hit. Effects are similar to TFCond_Jarated.
+	TFCond_Slowed				= (1 << 0),  //Toggled when a player is slowed down.
+	TFCond_Zoomed				= (1 << 1),  //Toggled when a player is zoomed.
+	TFCond_Disguising			= (1 << 2),  //Toggled when a Spy is disguising.
+	TFCond_Disguised			 = (1 << 3),  //Toggled when a Spy is disguised.
+	TFCond_Cloaked			   = (1 << 4),  //Toggled when a Spy is invisible.
+	TFCond_Ubercharged		   = (1 << 5),  //Toggled when a player is uberCharged.
+	TFCond_TeleportedGlow		= (1 << 6),  //Toggled when someone leaves a teleporter and has glow beneath their feet.
+	TFCond_Taunting			  = (1 << 7),  //Toggled when a player is taunting.
+	TFCond_UberchargeFading	= (1 << 8),  //Toggled when the uberCharge is fading.
+	TFCond_CloakFlicker		  = (1 << 9),  //Toggled when a Spy is visible during cloak.
+	TFCond_Teleporting		   = (1 << 10), //Only activates for a brief second when the player is being teleported; not very useful.
+	TFCond_Kritzkrieged		  = (1 << 11), //Toggled when a player is being crit buffed by the KritzKrieg.
+	TFCond_TmpDamageBonus		= (1 << 12), //Unknown what this is for. Name taken from the AlliedModders SDK.
+	TFCond_DeadRingered		  = (1 << 13), //Toggled when a player is taking reduced damage from the Deadringer.
+	TFCond_Bonked				= (1 << 14), //Toggled when a player is under the effects of The Bonk! Atomic Punch.
+	TFCond_Stunned			   = (1 << 15), //Toggled when a player's speed is reduced from airblast or a Sandman ball.
+	TFCond_Buffed				= (1 << 16), //Toggled when a player is within range of an activated Buff Banner.
+	TFCond_Charging			  = (1 << 17), //Toggled when a Demoman charges with the shield.
+	TFCond_DemoBuff			  = (1 << 18), //Toggled when a Demoman has heads from the Eyelander.
+	TFCond_CritCola			  = (1 << 19), //Toggled when the player is under the effect of The Crit-a-Cola.
+	TFCond_InHealRadius		  = (1 << 20), //Unused condition, name taken from AlliedModders SDK.
+	TFCond_Healing			   = (1 << 21), //Toggled when someone is being healed by a medic or a dispenser.
+	TFCond_OnFire				= (1 << 22), //Toggled when a player is on fire.
+	TFCond_Overhealed			= (1 << 23), //Toggled when a player has >100% health.
+	TFCond_Jarated			   = (1 << 24), //Toggled when a player is hit with a Sniper's Jarate.
+	TFCond_Bleeding			  = (1 << 25), //Toggled when a player is taking bleeding damage.
+	TFCond_DefenseBuffed		 = (1 << 26), //Toggled when a player is within range of an activated Battalion's Backup.
+	TFCond_Milked				= (1 << 27), //Player was hit with a jar of Mad Milk.
+	TFCond_MegaHeal			  = (1 << 28), //Player is under the effect of Quick-Fix charge.
+	TFCond_RegenBuffed		   = (1 << 29), //Toggled when a player is within a Concheror's range.
+	TFCond_MarkedForDeath		= (1 << 30), //Player is marked for death by a Fan O'War hit. Effects are similar to TFCond_Jarated.
 	TFCond_NoHealingDamageBuff = (1 << 31), //Unknown what this is used for.
 
-	TFCond_MiniCrits = (TFCond_Buffed | TFCond_CritCola),
+	TFCond_MiniCrits	= (TFCond_Buffed | TFCond_CritCola),
 	TFCond_IgnoreStates = (TFCond_Ubercharged | TFCond_Bonked),
 };
 enum tf_cond_ex : int
 {
-	TFCondEx_SpeedBuffAlly = (1 << 0),		   //Toggled when a player gets hit with the disciplinary action.
-	TFCondEx_HalloweenCritCandy = (1 << 1),	  //Only for Scream Fortress event maps that drop crit candy.
-	TFCondEx_CritCanteen = (1 << 2),			   //Player is getting a crit boost from a MVM canteen.
-	TFCondEx_CritDemoCharge = (1 << 3),		   //From demo's shield
-	TFCondEx_CritHype = (1 << 4),				   //Soda Popper crits.
-	TFCondEx_CritOnFirstBlood = (1 << 5),		   //Arena first blood crit buff.
-	TFCondEx_CritOnWin = (1 << 6),			   //End of round crits.
-	TFCondEx_CritOnFlagCapture = (1 << 7),	   //CTF intelligence capture crits.
-	TFCondEx_CritOnKill = (1 << 8),			   //Unknown what this is for.
-	TFCondEx_RestrictToMelee = (1 << 9),		   //Unknown what this is for.
+	TFCondEx_SpeedBuffAlly			 = (1 << 0),  //Toggled when a player gets hit with the disciplinary action.
+	TFCondEx_HalloweenCritCandy		= (1 << 1),  //Only for Scream Fortress event maps that drop crit candy.
+	TFCondEx_CritCanteen			   = (1 << 2),  //Player is getting a crit boost from a MVM canteen.
+	TFCondEx_CritDemoCharge			= (1 << 3),  //From demo's shield
+	TFCondEx_CritHype				  = (1 << 4),  //Soda Popper crits.
+	TFCondEx_CritOnFirstBlood		  = (1 << 5),  //Arena first blood crit buff.
+	TFCondEx_CritOnWin				 = (1 << 6),  //End of round crits.
+	TFCondEx_CritOnFlagCapture		 = (1 << 7),  //CTF intelligence capture crits.
+	TFCondEx_CritOnKill				= (1 << 8),  //Unknown what this is for.
+	TFCondEx_RestrictToMelee		   = (1 << 9),  //Unknown what this is for.
 	TFCondEx_DefenseBuffNoCritBlock = (1 << 10), //MvM Buff.
-	TFCondEx_Reprogrammed = (1 << 11),		   //MvM Bot has been reprogrammed.
-	TFCondEx_PyroCrits = (1 << 12),			   //Player is getting crits from the Mmmph charge.
-	TFCondEx_PyroHeal = (1 << 13),			   //Player is being healed from the Mmmph charge.
-	TFCondEx_FocusBuff = (1 << 14),			   //Player is getting a focus buff.
-	TFCondEx_DisguisedRemoved = (1 << 15),	   //Disguised remove from a bot.
-	TFCondEx_MarkedForDeathSilent = (1 << 16),   //Player is under the effects of the Escape Plan/Equalizer or GRU.
-	TFCondEx_DisguisedAsDispenser = (1 << 17),   //Bot is disguised as dispenser.
-	TFCondEx_Sapped = (1 << 18),				   //MvM bot is being sapped.
-	TFCondEx_UberchargedHidden = (1 << 19),	  //MvM Related
-	TFCondEx_UberchargedCanteen = (1 << 20),	 //Player is receiving uberCharge from a canteen.
-	TFCondEx_HalloweenBombHead = (1 << 21),	  //Player has a bomb on their head from Merasmus.
-	TFCondEx_HalloweenThriller = (1 << 22),	  //Players are forced to dance from Merasmus.
-	TFCondEx_BulletCharge = (1 << 26),		   //Player is receiving 75% reduced damage from bullets.
-	TFCondEx_ExplosiveCharge = (1 << 27),		   //Player is receiving 75% reduced damage from explosives.
-	TFCondEx_FireCharge = (1 << 28),			   //Player is receiving 75% reduced damage from fire.
-	TFCondEx_BulletResistance = (1 << 29),	   //Player is receiving 10% reduced damage from bullets.
-	TFCondEx_ExplosiveResistance = (1 << 30),	//Player is receiving 10% reduced damage from explosives.
-	TFCondEx_FireResistance = (1 << 31),		   //Player is receiving 10% reduced damage from fire.
+	TFCondEx_Reprogrammed			  = (1 << 11), //MvM Bot has been reprogrammed.
+	TFCondEx_PyroCrits				 = (1 << 12), //Player is getting crits from the Mmmph charge.
+	TFCondEx_PyroHeal				  = (1 << 13), //Player is being healed from the Mmmph charge.
+	TFCondEx_FocusBuff				 = (1 << 14), //Player is getting a focus buff.
+	TFCondEx_DisguisedRemoved		  = (1 << 15), //Disguised remove from a bot.
+	TFCondEx_MarkedForDeathSilent   = (1 << 16), //Player is under the effects of the Escape Plan/Equalizer or GRU.
+	TFCondEx_DisguisedAsDispenser   = (1 << 17), //Bot is disguised as dispenser.
+	TFCondEx_Sapped					= (1 << 18), //MvM bot is being sapped.
+	TFCondEx_UberchargedHidden		 = (1 << 19), //MvM Related
+	TFCondEx_UberchargedCanteen		= (1 << 20), //Player is receiving uberCharge from a canteen.
+	TFCondEx_HalloweenBombHead		 = (1 << 21), //Player has a bomb on their head from Merasmus.
+	TFCondEx_HalloweenThriller		 = (1 << 22), //Players are forced to dance from Merasmus.
+	TFCondEx_BulletCharge			  = (1 << 26), //Player is receiving 75% reduced damage from bullets.
+	TFCondEx_ExplosiveCharge		   = (1 << 27), //Player is receiving 75% reduced damage from explosives.
+	TFCondEx_FireCharge				= (1 << 28), //Player is receiving 75% reduced damage from fire.
+	TFCondEx_BulletResistance		  = (1 << 29), //Player is receiving 10% reduced damage from bullets.
+	TFCondEx_ExplosiveResistance	= (1 << 30), //Player is receiving 10% reduced damage from explosives.
+	TFCondEx_FireResistance			= (1 << 31), //Player is receiving 10% reduced damage from fire.
 
 	TFCondEx_IgnoreStates = (TFCondEx_PyroHeal)
 };
 enum tf_cond_ex2 : int
 {
-	TFCondEx2_Stealthed = (1 << 0),
-	TFCondEx2_MedigunDebuff = (1 << 1),
+	TFCondEx2_Stealthed				= (1 << 0),
+	TFCondEx2_MedigunDebuff			= (1 << 1),
 	TFCondEx2_StealthedUserBuffFade = (1 << 2),
-	TFCondEx2_BulletImmune = (1 << 3),
-	TFCondEx2_BlastImmune = (1 << 4),
-	TFCondEx2_FireImmune = (1 << 5),
-	TFCondEx2_PreventDeath = (1 << 6),
-	TFCondEx2_MVMBotRadiowave = (1 << 7),
-	TFCondEx2_HalloweenSpeedBoost = (1 << 8), //Wheel has granted player speed boost.
-	TFCondEx2_HalloweenQuickHeal = (1 << 9),  //Wheel has granted player quick heal.
-	TFCondEx2_HalloweenGiant = (1 << 10),		//Wheel has granted player giant mode.
-	TFCondEx2_HalloweenTiny = (1 << 11),		//Wheel has granted player tiny mode.
-	TFCondEx2_HalloweenInHell = (1 << 12),	//Wheel has granted player in hell mode.
-	TFCondEx2_HalloweenGhostMode = (1 << 13), //Wheel has granted player ghost mode.
-	TFCondEx2_Parachute = (1 << 16),			//Player has deployed the BASE Jumper.
-	TFCondEx2_BlastJumping = (1 << 17),		//Player has sticky or rocket jumped.
+	TFCondEx2_BulletImmune			 = (1 << 3),
+	TFCondEx2_BlastImmune			  = (1 << 4),
+	TFCondEx2_FireImmune			   = (1 << 5),
+	TFCondEx2_PreventDeath			 = (1 << 6),
+	TFCondEx2_MVMBotRadiowave		  = (1 << 7),
+	TFCondEx2_HalloweenSpeedBoost   = (1 << 8),  //Wheel has granted player speed boost.
+	TFCondEx2_HalloweenQuickHeal	= (1 << 9),  //Wheel has granted player quick heal.
+	TFCondEx2_HalloweenGiant		   = (1 << 10), //Wheel has granted player giant mode.
+	TFCondEx2_HalloweenTiny			= (1 << 11), //Wheel has granted player tiny mode.
+	TFCondEx2_HalloweenInHell		  = (1 << 12), //Wheel has granted player in hell mode.
+	TFCondEx2_HalloweenGhostMode	= (1 << 13), //Wheel has granted player ghost mode.
+	TFCondEx2_Parachute				= (1 << 16), //Player has deployed the BASE Jumper.
+	TFCondEx2_BlastJumping			 = (1 << 17), //Player has sticky or rocket jumped.
 };
 //===================================================================================================
 enum tf_classes
 {
-	TF2_Scout = 1,
-	TF2_Sniper = 2,
-	TF2_Soldier = 3,
-	TF2_Demoman = 4,
-	TF2_Medic = 5,
-	TF2_Heavy = 6,
-	TF2_Pyro = 7,
-	TF2_Spy = 8,
+	TF2_Scout	= 1,
+	TF2_Sniper   = 2,
+	TF2_Soldier  = 3,
+	TF2_Demoman  = 4,
+	TF2_Medic	= 5,
+	TF2_Heavy	= 6,
+	TF2_Pyro	 = 7,
+	TF2_Spy	  = 8,
 	TF2_Engineer = 9,
 };
 //===================================================================================================
@@ -784,7 +783,7 @@ enum class ClientFrameStage_t
 enum class ButtonCode_t
 {
 	BUTTON_CODE_INVALID = -1,
-	BUTTON_CODE_NONE = 0,
+	BUTTON_CODE_NONE	= 0,
 
 	KEY_FIRST = 0,
 
@@ -896,7 +895,7 @@ enum class ButtonCode_t
 	KEY_NUMLOCKTOGGLE,
 	KEY_SCROLLLOCKTOGGLE,
 
-	KEY_LAST = KEY_SCROLLLOCKTOGGLE,
+	KEY_LAST  = KEY_SCROLLLOCKTOGGLE,
 	KEY_COUNT = KEY_LAST - KEY_FIRST + 1,
 
 	// Mouse
@@ -910,7 +909,7 @@ enum class ButtonCode_t
 	MOUSE_WHEEL_UP,   // A fake button which is 'pressed' and 'released' when the wheel is moved up
 	MOUSE_WHEEL_DOWN, // A fake button which is 'pressed' and 'released' when the wheel is moved down
 
-	MOUSE_LAST = MOUSE_WHEEL_DOWN,
+	MOUSE_LAST  = MOUSE_WHEEL_DOWN,
 	MOUSE_COUNT = MOUSE_LAST - MOUSE_FIRST + 1
 };
 //===================================================================================================
@@ -954,6 +953,8 @@ public:
 
 	//ISteamUserStats011 *userStats;
 	nn_interface<ISteamUserStats011 *> userStats;
+
+	nn_interface<ISteamApps006 *> steamApps;
 };
 //===================================================================================================
 class CInterfaces
@@ -989,8 +990,8 @@ public:
 	//CInput 					*Input;
 	nn_interface<CInput *> Input;
 
-	CSteamInterfaces 		steam;
-	
+	CSteamInterfaces steam;
+
 	//CGlobals 				*Globals;
 	nn_interface<CGlobals *> Globals;
 

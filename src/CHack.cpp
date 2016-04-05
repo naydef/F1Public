@@ -220,10 +220,16 @@ void CHack::intro()
 {
 	_TRY
 	{
+
 		// wait until we have completely inited before running intro
 		while(!HState::instance()->checkStatus(HState::FullyInited))
 		{
 			HState::instance()->think();
+		}
+
+		if(gInts.steam.steamApps->BIsDlcInstalled(459)) // http://steamdb.info/app/459/
+		{
+			Log::Error("Why are you trying to run a public hack on a premium account??\nIm warning you now!\nARE YOU SURE YOU WANT TO GET VAC BANNED??");
 		}
 
 		gDrawManager.Initialize(); //Initalize the drawing class.

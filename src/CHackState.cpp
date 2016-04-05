@@ -53,6 +53,9 @@ void steam()
 
 		// get userStats (latest)
 		gInts.steam.userStats = reinterpret_cast<ISteamUserStats011 *>(gInts.steam.client->GetISteamUserStats(hNewUser, hNewPipe, STEAMUSERSTATS_INTERFACE_VERSION_011));
+
+		// get steamapps (latest)
+		gInts.steam.steamApps = reinterpret_cast<ISteamApps006 *>(gInts.steam.client->GetISteamApps(hNewUser, hNewPipe, STEAMAPPS_INTERFACE_VERSION_006));
 	}
 
 	HState::instance()->addStatus(HState::hackStatus::steamInited);
