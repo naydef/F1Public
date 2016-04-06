@@ -227,7 +227,7 @@ void CHack::intro()
 			HState::instance()->think();
 		}
 
-		.// creds lmaobox
+		// creds lmaobox
 		if(gInts.steam.steamApps->BIsDlcInstalled(459)) // http://steamdb.info/app/459/
 		{
 			Log::Error("Why are you trying to run a public hack on a premium account??\nIm warning you now!\nARE YOU SURE YOU WANT TO GET VAC BANNED??");
