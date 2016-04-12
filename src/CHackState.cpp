@@ -138,10 +138,10 @@ void HState::init()
 		gInts.Input		  = **reinterpret_cast<CInput ***>(dwInputPointer);
 
 		// hook getusercmd from CInput
-		VMTBaseManager *inputHook = new VMTBaseManager();
-		inputHook->Init(gInts.Input);
-		inputHook->HookMethod(&Hooked_GetUserCmd, gOffsets.getUserCmdOffset);
-		inputHook->Rehook();
+		//VMTBaseManager *inputHook = new VMTBaseManager();
+		//inputHook->Init(gInts.Input);
+		//inputHook->HookMethod(&Hooked_GetUserCmd, gOffsets.getUserCmdOffset);
+		//inputHook->Rehook();
 
 		// update the status
 		HState::instance()->addStatus(hackStatus::baseInited);
