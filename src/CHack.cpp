@@ -168,16 +168,16 @@ bool CHack::createMove(PVOID ClientMode, int edx, float input_sample_frametime, 
 			gLocalPlayerVars.activeWeapon = static_cast<classId>(-1);
 
 		// back up globals as the prediction increments them
-		float frameTime = gInts.Globals->frametime;
-		float currTime  = gInts.Globals->curtime;
+		//float frameTime = gInts.Globals->frametime;
+		//float currTime  = gInts.Globals->curtime;
 
 		gLocalPlayerVars.pred.oldOrigin = localEnt->GetAbsOrigin();
-		CUtilMove::runSimulation(gInts.Prediction, pUserCmd->command_number, gInts.Globals->curtime, pUserCmd, localEnt);
+		//CUtilMove::runSimulation(gInts.Prediction, pUserCmd->command_number, gInts.Globals->curtime, pUserCmd, localEnt);
 		gLocalPlayerVars.pred.origin = localEnt->GetAbsOrigin();
 
 		// restore backups
-		gInts.Globals->frametime = frameTime;
-		gInts.Globals->curtime   = currTime;
+		//gInts.Globals->frametime = frameTime;
+		//gInts.Globals->curtime   = currTime;
 
 		// set these before the hacks run
 		// we cant have these in chlmove as by that point they have already run
