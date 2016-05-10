@@ -104,7 +104,7 @@
     <ClCompile Include="CAimbot.cpp" />
     <ClCompile Include="CAutoAirblast.cpp" />
     <ClCompile Include="CBackstab.cpp" />
-    <ClCompile Include="CBunnyHop.cpp" />
+    <ClCompile Include="CMisc.cpp" />
     <ClCompile Include="CDrawManager.cpp" />
     <ClCompile Include="CEsp.cpp" />
     <ClCompile Include="CHack.cpp" />
@@ -134,7 +134,7 @@
     <ClInclude Include="CAimbot.h" />
     <ClInclude Include="CAutoAirblast.h" />
     <ClInclude Include="CBackstab.h" />
-    <ClInclude Include="CBunnyHop.h" />
+    <ClInclude Include="CMisc.h" />
     <ClInclude Include="CDrawManager.h" />
     <ClInclude Include="CEsp.h" />
     <ClInclude Include="CGlobalVars.h" />
@@ -152,7 +152,7 @@
     <ClInclude Include="CUtlMemory.h" />
     <ClInclude Include="CUtlMemoryPool.h" />
     <ClInclude Include="CUtlVector.h" />
-    <ClInclude Include="event.h" />
+    <ClInclude Include="enum.h" />
     <ClInclude Include="factory.h" />
     <ClInclude Include="getvfunc.h" />
     <ClInclude Include="CGlow.h" />
@@ -161,6 +161,7 @@
     <ClInclude Include="keyval.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="Netvar.h" />
+    <ClInclude Include="network.h" />
     <ClInclude Include="notNullInterface.h" />
     <ClInclude Include="Panels.h" />
     <ClInclude Include="prediction.h" />

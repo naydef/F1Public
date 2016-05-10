@@ -4,20 +4,26 @@
 CDrawManager gDrawManager;
 
 #define ESP_HEIGHT 12
-#define HUD_HEIGHT 14
+#define HUD_HEIGHT 16
 //===================================================================================
 void CDrawManager::Initialize()
 {
 	if(gInts.Surface == nullptr)
 		return;
 
+	std::setlocale(LC_ALL, "en_US");
+
 	gInts.Engine->GetScreenSize(gScreenSize.iScreenWidth, gScreenSize.iScreenHeight);
 
 	font_t font;
 
-	font.setFont("Arial", ESP_HEIGHT, 400, CDrawManager::FONTFLAG_OUTLINE, "esp");
+	font.setFont("Tahoma", ESP_HEIGHT, 400, CDrawManager::FONTFLAG_OUTLINE, "esp");
 	addFont(font);
-	font.setFont("Arial", HUD_HEIGHT, 500, CDrawManager::FONTFLAG_ANTIALIAS, "hud");
+	font.setFont("Tahoma", HUD_HEIGHT, 500, CDrawManager::FONTFLAG_ANTIALIAS, "hud");
+	addFont(font);
+	font.setFont("Arial Black", 30, 500, CDrawManager::FONTFLAG_ANTIALIAS, "menuMain");
+	addFont(font);
+	font.setFont("Arial Black", HUD_HEIGHT, 500, CDrawManager::FONTFLAG_ANTIALIAS, "menuList");
 	addFont(font);
 }
 //===================================================================================
@@ -78,7 +84,7 @@ void CDrawManager::DrawString(const char *fontName, int x, int y, DWORD dwColor,
 		return;
 
 	va_list va_alist;
-	char szBuffer[1024] = {'\0'};
+	char szBuffer[1024]	= {'\0'};
 	wchar_t szString[1024] = {'\0'};
 
 	va_start(va_alist, pszText);
@@ -129,6 +135,12 @@ void CDrawManager::OutlineRect(int x, int y, int w, int h, DWORD dwColor)
 	gInts.Surface->DrawOutlinedRect(x, y, x + w, y + h);
 }
 //===================================================================================
+void CDrawManager::DrawCircle(int x, int y, int radius, int segments, DWORD dwColor)
+{
+	gInts.Surface->DrawSetColor(RED(dwColor), GREEN(dwColor), BLUE(dwColor), ALPHA(dwColor));
+	gInts.Surface->DrawOutlinedCircle(x, y, radius, segments);
+}
+//===================================================================================
 void CDrawManager::DrawBox(Vector vOrigin, int r, int g, int b, int alpha, int box_width, int radius)
 {
 	Vector vScreen;
@@ -146,24 +158,98 @@ void CDrawManager::DrawBox(Vector vOrigin, int r, int g, int b, int alpha, int b
 	DrawRect(vScreen.x + radius, vScreen.y - radius, box_width, radius2 + box_width, COLORCODE(r, g, b, alpha));
 }
 //===================================================================================
+void CDrawManager::DrawBox(Vector *pointList, DWORD dwColor)
+{
+	Vector vStart, vEnd;
+
+	for(auto i = 0; i < 3; i++)
+	{
+		if(gDrawManager.WorldToScreen(pointList[i], vStart))
+		{
+			if(gDrawManager.WorldToScreen(pointList[i + 1], vEnd))
+				gDrawManager.drawLine(vStart.x, vStart.y, vEnd.x, vEnd.y, dwColor);
+		}
+	}
+
+	if(gDrawManager.WorldToScreen(pointList[0], vStart))
+	{
+		if(gDrawManager.WorldToScreen(pointList[3], vEnd))
+			gDrawManager.drawLine(vStart.x, vStart.y, vEnd.x, vEnd.y, dwColor);
+	}
+
+	for(int i = 4; i < 7; i++)
+	{
+		if(gDrawManager.WorldToScreen(pointList[i], vStart))
+		{
+			if(gDrawManager.WorldToScreen(pointList[i + 1], vEnd))
+				gDrawManager.drawLine(vStart.x, vStart.y, vEnd.x, vEnd.y, dwColor);
+		}
+	}
+
+	if(gDrawManager.WorldToScreen(pointList[4], vStart))
+	{
+		if(gDrawManager.WorldToScreen(pointList[7], vEnd))
+			gDrawManager.drawLine(vStart.x, vStart.y, vEnd.x, vEnd.y, dwColor);
+	}
+
+	if(gDrawManager.WorldToScreen(pointList[0], vStart))
+	{
+		if(gDrawManager.WorldToScreen(pointList[6], vEnd))
+			gDrawManager.drawLine(vStart.x, vStart.y, vEnd.x, vEnd.y, dwColor);
+	}
+
+	if(gDrawManager.WorldToScreen(pointList[1], vStart))
+	{
+		if(gDrawManager.WorldToScreen(pointList[5], vEnd))
+			gDrawManager.drawLine(vStart.x, vStart.y, vEnd.x, vEnd.y, dwColor);
+	}
+
+	if(gDrawManager.WorldToScreen(pointList[2], vStart))
+	{
+		if(gDrawManager.WorldToScreen(pointList[4], vEnd))
+			gDrawManager.drawLine(vStart.x, vStart.y, vEnd.x, vEnd.y, dwColor);
+	}
+
+	if(gDrawManager.WorldToScreen(pointList[3], vStart))
+	{
+		if(gDrawManager.WorldToScreen(pointList[7], vEnd))
+			gDrawManager.drawLine(vStart.x, vStart.y, vEnd.x, vEnd.y, dwColor);
+	}
+}
+//===================================================================================
+void CDrawManager::DrawCornerBox(int x, int y, int w, int h, int cx, int cy, DWORD dwColor)
+{
+	drawLine(x, y, x + (w / cx), y, dwColor);
+	drawLine(x, y, x, y + (h / cy), dwColor);
+
+	drawLine(x + w, y, x + w - (w / cx), y, dwColor);
+	drawLine(x + w, y, x + w, y + (h / cy), dwColor);
+
+	drawLine(x, y + h, x + (w / cx), y + h, dwColor);
+	drawLine(x, y + h, x, y + h - (h / cy), dwColor);
+
+	drawLine(x + w, y + h, x + w - (w / cx), y + h, dwColor);
+	drawLine(x + w, y + h, x + w, y + h - (h / cy), dwColor);
+}
+//===================================================================================
 bool CDrawManager::WorldToScreen(Vector &vOrigin, Vector &vScreen)
 {
 	const matrix3x4 &worldToScreen = gInts.Engine->WorldToScreenMatrix(); //Grab the world to screen matrix from CEngineClient::WorldToScreenMatrix
 
-	float w = worldToScreen[3][0] * vOrigin[0] + worldToScreen[3][1] * vOrigin[1] + worldToScreen[3][2] * vOrigin[2] + worldToScreen[3][3]; //Calculate the angle in compareson to the player's camera.
-	vScreen.z = 0;																																					//Screen doesn't have a 3rd dimension.
+	float w   = worldToScreen[3][0] * vOrigin[0] + worldToScreen[3][1] * vOrigin[1] + worldToScreen[3][2] * vOrigin[2] + worldToScreen[3][3]; //Calculate the angle in compareson to the player's camera.
+	vScreen.z = 0;																															  //Screen doesn't have a 3rd dimension.
 
 	if(w > 0.001) //If the object is within view.
 	{
-		float fl1DBw = 1 / w;																																																												//Divide 1 by the angle.
-		vScreen.x = (gScreenSize.iScreenWidth / 2) + (0.5 * ((worldToScreen[0][0] * vOrigin[0] + worldToScreen[0][1] * vOrigin[1] + worldToScreen[0][2] * vOrigin[2] + worldToScreen[0][3]) * fl1DBw) * gScreenSize.iScreenWidth + 0.5);   //Get the X dimension and push it in to the Vector.
-		vScreen.y = (gScreenSize.iScreenHeight / 2) - (0.5 * ((worldToScreen[1][0] * vOrigin[0] + worldToScreen[1][1] * vOrigin[1] + worldToScreen[1][2] * vOrigin[2] + worldToScreen[1][3]) * fl1DBw) * gScreenSize.iScreenHeight + 0.5); //Get the Y dimension and push it in to the Vector.
+		float fl1DBw = 1 / w;																																																				  //Divide 1 by the angle.
+		vScreen.x	= (gScreenSize.iScreenWidth / 2) + (0.5 * ((worldToScreen[0][0] * vOrigin[0] + worldToScreen[0][1] * vOrigin[1] + worldToScreen[0][2] * vOrigin[2] + worldToScreen[0][3]) * fl1DBw) * gScreenSize.iScreenWidth + 0.5);   //Get the X dimension and push it in to the Vector.
+		vScreen.y	= (gScreenSize.iScreenHeight / 2) - (0.5 * ((worldToScreen[1][0] * vOrigin[0] + worldToScreen[1][1] * vOrigin[1] + worldToScreen[1][2] * vOrigin[2] + worldToScreen[1][3]) * fl1DBw) * gScreenSize.iScreenHeight + 0.5); //Get the Y dimension and push it in to the Vector.
 		return true;
 	}
 
 	return false;
 }
-
+//===================================================================================
 CDrawManager::font_t CDrawManager::getFont(const char *windowsFontName)
 {
 	if(windowsFontName == NULL)
@@ -171,12 +257,12 @@ CDrawManager::font_t CDrawManager::getFont(const char *windowsFontName)
 
 	return fonts[windowsFontName];
 }
-
+//===================================================================================
 void CDrawManager::addFont(font_t font)
 {
 	fonts[font.name] = font;
 }
-
+//===================================================================================
 void CDrawManager::drawLine(int startx, int starty, int endx, int endy, DWORD color)
 {
 	gInts.Surface->DrawSetColor(RED(color), GREEN(color), BLUE(color), ALPHA(color));

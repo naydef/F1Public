@@ -3,7 +3,7 @@
 
 const char *CNoise::name() const
 {
-	return "Noisemaker";
+	return "NOISEMAKER SPAM";
 }
 
 bool CNoise::move(CUserCmd *pUserCmd)

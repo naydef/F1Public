@@ -35,5 +35,8 @@ public:
 	// hooked in key event
 	int keyEvent(PVOID CHClient, int edx, int eventcode, ButtonCode_t keynum, const char *currentBinding);
 
-	void runCommand(IPrediction *pPred, CBaseEntity *player, CUserCmd *ucmd, IMoveHelper *moveHelper) const;
+	inline CMenu *getMenu()
+	{
+		return &men;
+	}
 };

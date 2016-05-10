@@ -9,62 +9,84 @@ int CMenu::keyEvent(ButtonCode_t keynum)
 		if(activeVars == nullptr)
 			if(hacks.size() != 0)
 				activeVars = &hacks[0]->variables;
-				
-		return 0;
+
+		gInts.Surface->PlaySound("UI/buttonclick.wav");
 	}
 
 	if(bMenuActive)
 	{
-		if(keynum == ButtonCode_t::KEY_UP || keynum == ButtonCode_t::MOUSE_WHEEL_UP) // Up
+		switch(keynum)
 		{
+		case ButtonCode_t::KEY_UP:
+		case ButtonCode_t::MOUSE_WHEEL_UP:
 			if(activeVars->index > 0)
 				activeVars->index--;
 			else
 				activeVars->index = activeVars->size() - 1;
+
+			gInts.Surface->PlaySound("UI/item_info_mouseover.wav");
+
 			return 0;
-		}
-		else if(keynum == ButtonCode_t::KEY_DOWN || keynum == ButtonCode_t::MOUSE_WHEEL_DOWN) // Down
-		{
+			break;
+
+		case ButtonCode_t::KEY_DOWN:
+		case ButtonCode_t::MOUSE_WHEEL_DOWN:
 			if(activeVars->index < activeVars->size() - 1)
 				activeVars->index++;
 			else
 				activeVars->index = 0;
+
+			gInts.Surface->PlaySound("UI/item_info_mouseover.wav");
+
 			return 0;
-		}
-		else if(keynum == ButtonCode_t::KEY_LEFT || keynum == ButtonCode_t::MOUSE_LEFT) // Left
-		{
+			break;
+
+		case ButtonCode_t::KEY_LEFT:
+		case ButtonCode_t::MOUSE_LEFT:
 			activeVars->active().decrement();
+
+			gInts.Surface->PlaySound("UI/buttonclick.wav");
+
 			return 0;
-		}
-		else if(keynum == ButtonCode_t::KEY_RIGHT || keynum == ButtonCode_t::MOUSE_RIGHT) // Right
-		{
+			break;
+
+		case ButtonCode_t::KEY_RIGHT:
+		case ButtonCode_t::MOUSE_RIGHT:
 			activeVars->active().increment();
+
+			gInts.Surface->PlaySound("UI/buttonclick.wav");
+
 			return 0;
-		}
-		else if(keynum == ButtonCode_t::KEY_TAB)
-		{
+			break;
+
+		case ButtonCode_t::KEY_TAB:
 			if(iIndex < hacks.size() - 1)
 				iIndex++;
 			else if(iIndex == hacks.size() - 1)
 				iIndex = 0;
 
 			// close all active switches
-			closeSwitch(*activeVars);
+			activeVars->closeSwitch();
 
 			// set the active vars to the next
 			activeVars = &hacks[iIndex]->variables;
 
+			gInts.Surface->PlaySound("UI/item_info_mouseover.wav");
+
 			return 0;
-		}
-		else if(keynum == ButtonCode_t::KEY_ENTER)
-		{
+			break;
+
+		case ButtonCode_t::KEY_ENTER:
 			Log::Console("Enter pressed!!");
 			// switches can only be opened using the enter key
 			if(activeVars->active().getType() == type_t::Switch)
 			{
-				activeVars->active().bVal = true;
+				activeVars->active().increment();
 				//Log::Console("var %s is now %s", activeVars->active().name_.c_str(), activeVars->active().bVal ? "true" : "false");
-				activeVars = &activeVars->active().vars;
+				activeVars = (vecVars *)activeVars->active().val;
+
+				gInts.Surface->PlaySound("UI/buttonclick.wav");
+
 			}
 			else
 			{
@@ -72,14 +94,21 @@ int CMenu::keyEvent(ButtonCode_t keynum)
 				if(activeVars->parent)
 				{
 					activeVars = activeVars->parent;
-					activeVars->active().bVal = false;
+					activeVars->active().decrement();
 					//Log::Console("var %s is now %s", activeVars->active().name_.c_str(), activeVars->active().bVal ? "true" : "false");
+
+					gInts.Surface->PlaySound("UI/buttonclickrelease.wav");
+
 				}
 			}
 			return 0;
+			break;
+
+		default:
+			return 1;
 		}
 	}
-	// by default get the engine to process the key press
+	// get the engine to handle all other cases
 	return 1;
 }
 
@@ -91,48 +120,60 @@ void CMenu::menu()
 		return;
 	try
 	{
-		int x = 0, menux = 300,
-			//xx = x + 105,
-			y = 300, yy = 0,
-			h = gDrawManager.GetPixelTextSize("hud", "A").height,
+		int x	 = 0,
+			menux = 300,
+			y	 = 300,
+			yy	= 0,
+			//h	 = gDrawManager.GetPixelTextSize("hud", "A").height,
 			menuw = 230;
-			
+
+		//int hudHeight = gDrawManager.GetPixelTextSize("hud", "A").height;
+		const int menuMainHeight = gDrawManager.GetPixelTextSize("menuMain", "A").height;
+		const int menuListHeight = gDrawManager.GetPixelTextSize("menuList", "A").height;
+
+		yy = GetMenuHeight(menuMainHeight);
+
+		// menu color is team color
 		DWORD menuColor = gDrawManager.dwGetTeamColor(gLocalPlayerVars.team);
 
-		if(yy == 0)
+		// draw the background
+		gDrawManager.DrawRect(x, y, (gScreenSize.iScreenWidth / 3), yy, COLORCODE(30, 30, 30, 170));
+
+		int curr = yy = 0;
+
+		for(auto &hack : hacks)
 		{
-			int curr = 0;
-
-			for(auto &hack : hacks)
+			CDrawManager::font_size_t size = gDrawManager.GetPixelTextSize("hud", hack->name());
+			//size.length += 2;
+			//size.height = h + 2;
+			if(curr == iIndex)
 			{
-				CDrawManager::font_size_t size = gDrawManager.GetPixelTextSize("hud", hack->name());
-				size.length += 2;
-				size.height += 2;
-				if(curr == iIndex)
-				{
-					gDrawManager.DrawRect(x, y + yy, size.length, size.height, COLOR_BLACK);
-					gDrawManager.OutlineRect(x, y + yy, size.length, size.height, COLOR_MENU_OFF);
-					gDrawManager.DrawString("hud", x + 2, y + yy + 1, COLOR_MENU_OFF, hack->name());
-				}
-				else
-				{
-					gDrawManager.DrawRect(x, y + yy, size.length, size.height, COLOR_BLACK);
-					gDrawManager.OutlineRect(x, y + yy, size.length, size.height, menuColor);
-					gDrawManager.DrawString("hud", x + 2, y + yy + 2, menuColor, hack->name());
-				}
-				yy += size.height + 4;
-				curr++;
-
-				menux = max(menux, size.length);
+				//gDrawManager.DrawRect(x, y + yy, size.length, size.height, COLOR_BLACK);
+				//gDrawManager.OutlineRect(x, y + yy, size.length, size.height, COLOR_MENU_OFF);
+				gDrawManager.DrawString("menuMain", x + 2, y + yy + 1, COLOR_MENU_OFF, hack->name());
 			}
+			else
+			{
+				//gDrawManager.DrawRect(x, y + yy, size.length, size.height, COLOR_BLACK);
+				//gDrawManager.OutlineRect(x, y + yy, size.length, size.height, menuColor);
+				gDrawManager.DrawString("menuMain", x + 2, y + yy + 2, menuColor, hack->name());
+			}
+			yy += menuMainHeight;
+			curr++;
+
+			menux = max(menux, size.length);
 		}
-		gDrawManager.DrawString(XorString("hud"), x + 12, y - (h + 2), menuColor, XorString("F1Public Hack \"github.com/josh33901/F1Public\""));
+
+		int xx = menux + 170;
+
+		gDrawManager.DrawString(XorString("hud"), x + 12, y - (menuMainHeight + 2), menuColor, XorString("F1ssi0N 2016 Hack \"Gitlab.com/josh33901/F1Rebase/\""));
 
 		y += 32;
 
-		int xx = menux + 105;
+		// drawList(hacks[iIndex]->variables, menuColor, menux, y, xx, menuw, h);
 
-		drawList(hacks[iIndex]->variables, menuColor, menux, y, xx, menuw, h);
+		// call the current hack's menu draw function
+		hacks[iIndex]->menuDraw(menuColor, menux, y, xx, menuw, menuListHeight);
 
 		return;
 	}
@@ -153,10 +194,9 @@ void CMenu::drawList(vecVars &list, DWORD color, int x, int y, int xx, int w, in
 
 	int iMenuItems = list.size();
 
-
 	// draw the background box
-	gDrawManager.DrawRect(x, y, w, iMenuItems * h, COLOR_BACK);
-	gDrawManager.OutlineRect(x, y, w, iMenuItems * h, color);
+	//gDrawManager.DrawRect(x, y, w, iMenuItems * h, COLOR_BACK);
+	//gDrawManager.OutlineRect(x, y, w, iMenuItems * h, color);
 
 	for(int i = 0; i < iMenuItems; i++)
 	{
@@ -164,25 +204,25 @@ void CMenu::drawList(vecVars &list, DWORD color, int x, int y, int xx, int w, in
 
 		if(curr.getType() == type_t::Switch)
 		{
-			if(curr.bGet())
+			if(((vecVars *)curr.val)->open)
 			{
-				int newx = x + w + 4;
+				int newx  = x + w + 4;
 				int newxx = w + 4 + xx;
 
-				drawList(curr.vars, color, newx, y, newxx, w, h);
+				drawList(*(vecVars *)curr.val, color, newx, y, newxx, w, h);
 			}
 		}
 
 		if(i != list.index)
 		{
-			gDrawManager.DrawString(XorString("hud"), x + 2, y + (h * i), COLOR_MENU_OFF, curr.name_.c_str());
-			gDrawManager.DrawString(XorString("hud"), xx, y + (h * i), COLOR_MENU_OFF, curr.print()); // call print for types
+			gDrawManager.DrawString(XorString("menuList"), x + 2, y + (h * i), COLOR_MENU_OFF, curr.Name());
+			gDrawManager.DrawString(XorString("menuList"), xx, y + (h * i), COLOR_MENU_OFF, curr.print().c_str()); // call print for types
 		}
 		else
 		{
 			gDrawManager.DrawRect(x + 1, y + (h * i), w - 2, h, COLORCODE(255, 255, 255, 80));
-			gDrawManager.DrawString(XorString("hud"), x + 2, y + (h * i), color, curr.name_.c_str());
-			gDrawManager.DrawString(XorString("hud"), xx, y + (h * i), color, curr.print()); // call print for types
+			gDrawManager.DrawString(XorString("menuList"), x + 2, y + (h * i), color, curr.Name());
+			gDrawManager.DrawString(XorString("menuList"), xx, y + (h * i), color, curr.print().c_str()); // call print for types
 		}
 	}
 }
@@ -193,4 +233,5 @@ void CMenu::addHack(IHack *hack)
 }
 
 void CMenu::get()
-{}
+{
+}

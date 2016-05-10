@@ -1,19 +1,26 @@
 #pragma once
 
 #include "IHack.h"
-#include <unordered_map>
 
-class ConVar;
+#include "CTargetHelper.h"
+#include "CAimHelper.h"
 
 class CAutoAirblast : public IHack
 {
-	var enabled_bool{"Enabled", type_t::Bool};
+	bool enabled;
+	bool breakMode;
+
+	var enabled_bool{"Enabled", &enabled};
+	var break_bool{"Break mode", &breakMode};
+
+	// std::unordered_map<int, float> targets;
 
 	// maps entity indexes to their distance
-	std::unordered_map<int, float> targets;
+	CDistanceTargetSystem targs;
+
+	CSnapAimSystem aimer;
 
 public:
-
 	CAutoAirblast();
 
 	// Inherited via IHack
@@ -22,5 +29,5 @@ public:
 	virtual bool inEntityLoop(int index) override;
 
 private:
-	int findBestTarget();
+	// int findBestTarget();
 };

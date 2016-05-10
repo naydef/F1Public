@@ -10,7 +10,7 @@
 #include "CGlow.h"
 #include "CMenu.h"
 #include "CTrigger.h"
-#include "CBunnyHop.h"
+#include "CMisc.h"
 #include "CNoise.h"
 #include "CAimbot.h"
 #include "CAutoAirblast.h"
@@ -33,6 +33,8 @@ void CHack::paintTraverse(PVOID pPanels, int edx, unsigned int vguiPanel, bool f
 	_TRY
 	{
 		_INSTALL_SEH_TRANSLATOR();
+
+		gInts.DebugOverlay->ClearAllOverlays();
 
 		VMTManager &hook = VMTManager::GetHook(pPanels);																								 //Get a pointer to the instance of your VMTManager with the function GetHook.
 		hook.GetMethod<void(__thiscall *)(PVOID, unsigned int, bool, bool)>(gOffsets.paintTraverseOffset)(pPanels, vguiPanel, forceRepaint, allowForce); //Call the original.
@@ -65,10 +67,10 @@ void CHack::paintTraverse(PVOID pPanels, int edx, unsigned int vguiPanel, bool f
 			//y += gDrawManager.GetHudHeight();
 			//gDrawManager.DrawString("hud", 0, y, COLOR_OBJ, "new: %f %f %f", gLocalPlayerVars.pred.origin[0], gLocalPlayerVars.pred.origin[1], gLocalPlayerVars.pred.origin[2]);
 			//y += gDrawManager.GetHudHeight();
-			gDrawManager.DrawString("hud", 0, y, COLOR_OBJ, "dif: %f %f %f", gLocalPlayerVars.pred.origin[0] - gLocalPlayerVars.pred.oldOrigin[0], gLocalPlayerVars.pred.origin[1] - gLocalPlayerVars.pred.oldOrigin[1], gLocalPlayerVars.pred.origin[2] - gLocalPlayerVars.pred.oldOrigin[2]);
-			y += gDrawManager.GetHudHeight();
-			gDrawManager.DrawString("hud", 0, y, COLOR_OBJ, "curtime: %f", gInts.Globals->curtime);
-			y += gDrawManager.GetHudHeight();
+			//gDrawManager.DrawString("hud", 0, y, COLOR_OBJ, "dif: %f %f %f", gLocalPlayerVars.pred.origin[0] - gLocalPlayerVars.pred.oldOrigin[0], gLocalPlayerVars.pred.origin[1] - gLocalPlayerVars.pred.oldOrigin[1], gLocalPlayerVars.pred.origin[2] - gLocalPlayerVars.pred.oldOrigin[2]);
+			//y += gDrawManager.GetHudHeight();
+			//gDrawManager.DrawString("hud", 0, y, COLOR_OBJ, "curtime: %f", gInts.Globals->curtime);
+			//y += gDrawManager.GetHudHeight();
 			//gDrawManager.DrawString("hud", 0, y, COLOR_OBJ, "flNextAttack: %f", gLocalPlayerVars.flNextAttack);
 			//y += gDrawManager.GetHudHeight();
 			//gDrawManager.DrawString("hud", 0, y, COLOR_OBJ, "diff: %f", gLocalPlayerVars.flNextAttack - gInts.Globals->curtime);
@@ -167,17 +169,45 @@ bool CHack::createMove(PVOID ClientMode, int edx, float input_sample_frametime, 
 		else
 			gLocalPlayerVars.activeWeapon = static_cast<classId>(-1);
 
-		// back up globals as the prediction increments them
-		//float frameTime = gInts.Globals->frametime;
-		//float currTime  = gInts.Globals->curtime;
 
+		// begin local client cmd prediction
 		gLocalPlayerVars.pred.oldOrigin = localEnt->GetAbsOrigin();
-		//CUtilMove::runSimulation(gInts.Prediction, pUserCmd->command_number, gInts.Globals->curtime, pUserCmd, localEnt);
-		gLocalPlayerVars.pred.origin = localEnt->GetAbsOrigin();
 
-		// restore backups
-		//gInts.Globals->frametime = frameTime;
-		//gInts.Globals->curtime   = currTime;
+		CMoveData moveData;
+
+		memset(&moveData, 0, sizeof(CMoveData));
+
+		// back up the globals
+		float oldCurTime = gInts.Globals->curtime;
+		float oldFrameTime = gInts.Globals->frametime;
+
+		// set up the globals
+		gInts.Globals->curtime = local.get<float>(gEntVars.nTickBase) * gInts.Globals->interval_per_tick;
+		gInts.Globals->frametime = gInts.Globals->interval_per_tick;
+
+		CBaseEntity *pLocal = local.castToPointer<CBaseEntity>();
+
+		// set the current cmd
+		local.set<CUserCmd *>(0x107C, pUserCmd);
+
+		gInts.GameMovement->StartTrackPredictionErrors(pLocal);
+
+		// do actual player cmd prediction
+		gInts.Prediction->SetupMove(pLocal, pUserCmd, gInts.MoveHelper, &moveData);
+		gInts.GameMovement->ProcessMovement(pLocal, &moveData);
+		gInts.Prediction->RunCommand(pLocal, pUserCmd, gInts.MoveHelper);
+		gInts.Prediction->FinishMove(pLocal, pUserCmd, &moveData);
+
+		gInts.GameMovement->FinishTrackPredictionErrors(pLocal);
+
+		// reset the current cmd
+		local.set<CUserCmd *>(0x107C, 0);
+
+		// restore the globals
+		gInts.Globals->curtime = oldCurTime;
+		gInts.Globals->frametime = oldFrameTime;
+
+		gLocalPlayerVars.pred.origin = local->GetAbsOrigin();
 
 		// set these before the hacks run
 		// we cant have these in chlmove as by that point they have already run
@@ -259,7 +289,7 @@ void CHack::intro()
 			men.addHack(new CBackstab());
 			men.addHack(new CGlow());
 			men.addHack(new CTrigger());
-			men.addHack(new CBunnyHop());
+			men.addHack(new CMisc());
 			men.addHack(new CNoise());
 			men.addHack(new CAimbot());
 			men.addHack(new CAutoAirblast());

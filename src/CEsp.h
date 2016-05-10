@@ -2,16 +2,37 @@
 
 #include "IHack.h"
 
+#include "CEntity.h"
+
 class CESP : public IHack
 {
-	var enabled_bool = var("Enabled", type_t::Bool);
-	var box_bool = var("ESP Box", type_t::Bool);
-	var guid_bool = var("GUID", type_t::Bool);
-	var name_bool = var("Name", type_t::Bool);
-	var health_bool = var("Health", type_t::Bool);
-	var friend_bool = var("Friends?", type_t::Bool);
-	var index_bool = var("Index", type_t::Bool);
-	var id_bool = var("Object ID", type_t::Bool);
+
+	bool enabled;
+	bool renderBox;
+	bool renderGUID;
+	bool renderName;
+	bool renderHealth;
+	bool renderFriends;
+	bool renderIndex;
+	bool renderObjectID;
+	bool renderViewESP;
+	float viewESPLength;
+
+	var enabled_bool{"Enabled", &enabled};
+	var box_bool{"ESP Box", &renderBox};
+	var guid_bool{"GUID", &renderGUID};
+	var name_bool{"Name", &renderName};
+	var health_bool{"Health", &renderHealth};
+	var friend_bool{"Friends?", &renderFriends};
+	var index_bool{"Index", &renderIndex};
+	var id_bool{"Object ID", &renderObjectID};
+	var view_bool{"View ESP", &renderViewESP};
+	var view_float{"View Length", &viewESPLength, 100.0f, 5000.0f, 500.0f, 100.0f};
+
+	// creds to Roskonix for these nice esp boxes
+	void DynamicBox(CEntity<> ent, const char* szName, DWORD dwColor);
+
+	void FrameHitbox(CEntity<> player, int iHitbox);
 
 public:
 	CESP()
@@ -24,6 +45,8 @@ public:
 		variables.push_back(friend_bool);
 		variables.push_back(index_bool);
 		variables.push_back(id_bool);
+		variables.push_back(view_bool);
+		variables.push_back(view_float);
 	}
 
 	const char *name() const override;

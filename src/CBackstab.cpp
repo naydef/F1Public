@@ -3,18 +3,16 @@
 #include "SDK.h"
 #include "CEntity.h"
 #include "Trace.h"
+#include "Util.h"
 
-#define __USENETVAR
+#define __USENETVAR 1
 
-const char *CBackstab::name() const
-{
-	return "Auto Backstab";
-}
+const char *CBackstab::name() const { return "AUTO-BACKSTAB"; }
 
 bool CBackstab::move(CUserCmd *pCommand)
 {
 	// if the hack is not enabled
-	if(!variables[0].get<bool>())
+	if(!enabled)
 		return false;
 
 	// testing auto backstabb - works
@@ -41,8 +39,8 @@ bool CBackstab::move(CUserCmd *pCommand)
 	if(weapon->GetMaxClip1() != -1) // easier check than strcmp - less time wasted
 		return false;
 
-	//if ( !weapon.get<bool>( gEntVars.bReadyToBackstab ) ) // is ready to backstab
-	//	return false;
+	if(!weapon.get<bool>(gEntVars.bReadyToBackstab)) // is ready to backstab
+		return false;
 
 	char *name = weapon->GetName();
 
@@ -58,6 +56,7 @@ bool CBackstab::move(CUserCmd *pCommand)
 	{
 		return false;
 	}
+
 
 	return true;
 }
@@ -85,9 +84,9 @@ bool CBackstab::canBackstab(CEntity<CBaseCombatWeapon> &weap_entity, CEntity<> &
 	if(other_entity.get<BYTE>(gEntVars.iLifeState) != LIFE_ALIVE)
 		return false;
 
-	classId classId = other_entity->GetClientClass()->iClassID;
+	classId Class = other_entity->GetClientClass()->iClassID;
 
-	if(classId != classId::CTFPlayer)
+	if(Class != classId::CTFPlayer)
 		return false;
 
 	int other_team = other_entity.get<int>(gEntVars.iTeam); // so we dont have to get the netvar every time
@@ -95,9 +94,9 @@ bool CBackstab::canBackstab(CEntity<CBaseCombatWeapon> &weap_entity, CEntity<> &
 	if(other_team == gLocalPlayerVars.team || (other_team < 2 || other_team > 3)) // check team is not our team or invalid team
 		return false;
 
-	if(engineCanBackstab(tfweap.castToPointer<CBaseCombatWeapon>(), other_entity.castToPointer<CBaseEntity>()))
+	if(isBehind(other_entity, local_entity))
 	{
-		//Log::Console( "canBackstab!!" );
+		Log::Console("Can Backstab!");
 		return true;
 	}
 
@@ -107,63 +106,53 @@ bool CBackstab::canBackstab(CEntity<CBaseCombatWeapon> &weap_entity, CEntity<> &
 // maybe look into how the engine does it
 bool CBackstab::isBehind(CEntity<> &other_entity, CEntity<> &local_entity)
 {
-	//if ( other_entity.isNull( ) )
-	//	return false;
+	if ( other_entity.isNull( ) )
+		return false;
 
-	//if ( local_entity.isNull( ) )
-	//	return false;
+	if ( local_entity.isNull( ) )
+		return false;
 
-	//// up here because the thisptr becomes null (somehow)
-	//float maxDot = variables[ 1 ].fGet( );
+	// Get the forward view vector of the target, ignore Z
+	Vector vecVictimForward;
+	AngleVectors(other_entity->GetPrevLocalAngles(), &vecVictimForward);
+	vecVictimForward.z = 0.0f;
+	vecVictimForward.NormalizeInPlace();
 
-	//// Get the forward view vector of the target, ignore Z
-	//Vector vecVictimForward = Vector( );
-	////vecVictimForward.AngleVectors( other_entity->GetAbsAngles() ); // <---- TODO returns 0, 0, 0 sometimes, maybe check this
-	////vecVictimForward[0] = 0.0f; // no pitch
-	//vecVictimForward[ 2 ] = 0.0f; // no roll
-	////vecVictimForward.NormalizeInPlace();
+	// Get a vector from my origin to my targets origin
+	Vector vecToTarget;
+	Vector localWorldSpace;
+	local_entity->GetWorldSpaceCenter(localWorldSpace);
+	Vector otherWorldSpace;
+	other_entity->GetWorldSpaceCenter(otherWorldSpace);
+	vecToTarget = otherWorldSpace - localWorldSpace;
+	vecToTarget.z = 0.0f;
+	vecToTarget.NormalizeInPlace();
 
-	//Vector vecLocalForward = local_entity->GetAbsAngles( );
-	////vecLocalForward.AngleVectors( local_entity->GetAbsAngles() );
-	////vecLocalForward[0] = 0.0f; // no pitch
-	//vecLocalForward[ 2 ] = 0.0f; // no roll
-	////vecLocalForward.NormalizeInPlace();
+	// Get a forward vector of the attacker.
+	Vector vecOwnerForward;
+	AngleVectors(local_entity->GetPrevLocalAngles(), &vecOwnerForward);
+	vecOwnerForward.z = 0.0f;
+	vecOwnerForward.NormalizeInPlace();
 
-	////Log::Console( "%f %f %f", vecLocalForward[0], vecLocalForward[1], vecLocalForward[2] );
-	////Log::Console( "%f %f %f", vecVictimForward[0], vecVictimForward[1], vecVictimForward[2] );
+	float flDotOwner = vecOwnerForward.Dot(vecToTarget);
+	float flDotVictim = vecVictimForward.Dot(vecToTarget);
 
-	//// Get a vector from my origin to my targets origin
-	//Vector vecToTarget, vecTarget, vecLocal;
-	//other_entity->GetWorldSpaceCenter( vecTarget );
-	//local_entity->GetWorldSpaceCenter( vecLocal );
-	//vecToTarget = vecTarget - vecLocal;
-	////vecToTarget[0] = 0.0f; // no pitch
-	//vecToTarget[ 2 ] = 0.0f; // no roll
+	// Make sure they're actually facing the target.
+	// This needs to be done because lag compensation can place target slightly behind the attacker.
+	if(flDotOwner > 0.5)
+		return (flDotVictim > -0.1);
+	
+	return false;
 
-	//vecToTarget.NormalizeInPlace( );
+	//typedef bool(__thiscall * IsBehindFn)(CBaseCombatWeapon *, CBaseEntity *);
 
-	//float flDot = vecVictimForward.Dot( vecToTarget );
+	//static DWORD dwLoc = gSignatures.GetClientSignature("E8 ? ? ? ? 84 C0 74 08 5F B0 01 5E 5D C2 04 00 A1") + 0x1;
 
-	//float normal = ( 1.0f / flDot + FLT_EPSILON );
+	//static DWORD dwIsBehind = ((*(PDWORD)(dwLoc)) + dwLoc + 4);
 
-	////flDot *= (1.0f / ( flDot + FLT_EPSILON ));
-	////maxDot *= (1.0f / ( maxDot + FLT_EPSILON ));
+	//static IsBehindFn isBehind = (IsBehindFn)dwIsBehind;
 
-	////Log::LogToConsole( "Dot: %f", flDot );
-	////Log::LogToConsole( "maxDot: %f", maxDot );
-	////Log::LogToConsole( "Normal: %f", normal );
-
-	//return ( normal < maxDot );
-
-	typedef bool(__thiscall * IsBehindFn)(CBaseCombatWeapon *, CBaseEntity *);
-
-	static DWORD dwLoc = gSignatures.GetClientSignature("E8 ? ? ? ? 84 C0 74 08 5F B0 01 5E 5D C2 04 00 A1") + 0x1;
-
-	static DWORD dwIsBehind = ((*(PDWORD)(dwLoc)) + dwLoc + 4);
-
-	static IsBehindFn isBehind = (IsBehindFn)dwIsBehind;
-
-	return isBehind(local_entity.castToPointer<CBaseCombatWeapon>(), other_entity.castToPointer<CBaseEntity>());
+	//return isBehind(local_entity.castToPointer<CBaseCombatWeapon>(), other_entity.castToPointer<CBaseEntity>());
 }
 
 bool CBackstab::engineCanBackstab(CBaseCombatWeapon *weapon, CBaseEntity *target)
@@ -179,12 +168,11 @@ bool CBackstab::engineCanBackstab(CBaseCombatWeapon *weapon, CBaseEntity *target
 	if(!weapon || !target)
 		return false;
 
+	CUtilMove::safeRunSimulation(gInts.Prediction.get(), target);
+
 	bool r = backstab(weapon, target);
 
 	return r;
 }
 
-bool CBackstab::predicts(CEntity<> &local, CEntity<> &other)
-{
-	return false;
-}
+bool CBackstab::predicts(CEntity<> &local, CEntity<> &other) { return false; }

@@ -5,37 +5,34 @@
 #include "CDrawManager.h"
 #include "bspflags.h"
 
-const char *CTrigger::name() const
-{
-	return "Triggerbot";
-}
+const char *CTrigger::name() const { return "TRIGGERBOT"; }
 
 bool CTrigger::paint()
 {
-	//int y = 500;
-	//gDrawManager.DrawString( "hud", 0, y, 0xFFFFFFFF, "   Angles Vector: %f %f %f", curr_angles.x, curr_angles.y, curr_angles.z );
-	//y += gDrawManager.GetHudHeight( );
-	//gDrawManager.DrawString( "hud", 0, y, 0xFFFFFFFF, "Direction Vector: %f %f %f", curr_direction.x, curr_direction.y, curr_direction.z );
-	//y += gDrawManager.GetHudHeight( );
-	//gDrawManager.DrawString( "hud", 0, y, 0xFFFFFFFF, "       Ray Delta: %f %f %f", curr_ray.x, curr_ray.y, curr_ray.z );
-	//y += gDrawManager.GetHudHeight( );
-	//gDrawManager.DrawString( "hud", 0, y, 0xFFFFFFFF, "    Cur Position: %f %f %f", curr_pos.x, curr_pos.y, curr_pos.z );
-	//y += gDrawManager.GetHudHeight( );
-	//gDrawManager.DrawString( "hud", 0, y, 0xFFFFFFFF, "    End Position: %f %f %f", curr_endpos.x, curr_endpos.y, curr_endpos.z );
-	//y += gDrawManager.GetHudHeight( );
-	//gDrawManager.DrawString( "hud", 0, y, 0xFFFFFFFF, "  box|group|bone: %i %i %i", curr_hitbox, curr_hitgroup, curr_physicsbone );
-	//y += gDrawManager.GetHudHeight( );
-	//gDrawManager.DrawString( "hud", 0, y, 0xFFFFFFFF, "   ClientClassId: %i", curr_class_id );
-	//y += gDrawManager.GetHudHeight();
-	//gDrawManager.DrawString( "hud", 0, y, 0xFFFFFFFF, "         IsNull?: %s", curr_ent_null ? "true" : "false" );
-	//y += gDrawManager.GetHudHeight();
+	// int y = 500;
+	// gDrawManager.DrawString( "hud", 0, y, 0xFFFFFFFF, "   Angles Vector: %f %f %f", curr_angles.x, curr_angles.y, curr_angles.z );
+	// y += gDrawManager.GetHudHeight( );
+	// gDrawManager.DrawString( "hud", 0, y, 0xFFFFFFFF, "Direction Vector: %f %f %f", curr_direction.x, curr_direction.y, curr_direction.z );
+	// y += gDrawManager.GetHudHeight( );
+	// gDrawManager.DrawString( "hud", 0, y, 0xFFFFFFFF, "       Ray Delta: %f %f %f", curr_ray.x, curr_ray.y, curr_ray.z );
+	// y += gDrawManager.GetHudHeight( );
+	// gDrawManager.DrawString( "hud", 0, y, 0xFFFFFFFF, "    Cur Position: %f %f %f", curr_pos.x, curr_pos.y, curr_pos.z );
+	// y += gDrawManager.GetHudHeight( );
+	// gDrawManager.DrawString( "hud", 0, y, 0xFFFFFFFF, "    End Position: %f %f %f", curr_endpos.x, curr_endpos.y, curr_endpos.z );
+	// y += gDrawManager.GetHudHeight( );
+	// gDrawManager.DrawString( "hud", 0, y, 0xFFFFFFFF, "  box|group|bone: %i %i %i", curr_hitbox, curr_hitgroup, curr_physicsbone );
+	// y += gDrawManager.GetHudHeight( );
+	// gDrawManager.DrawString( "hud", 0, y, 0xFFFFFFFF, "   ClientClassId: %i", curr_class_id );
+	// y += gDrawManager.GetHudHeight();
+	// gDrawManager.DrawString( "hud", 0, y, 0xFFFFFFFF, "         IsNull?: %s", curr_ent_null ? "true" : "false" );
+	// y += gDrawManager.GetHudHeight();
 
 	return false;
 }
 
 bool CTrigger::move(CUserCmd *pUserCmd)
 {
-	if(!variables[0].bGet() || !pUserCmd)
+	if(!enabled)
 		return false;
 
 	CEntity<> local{me};
@@ -43,9 +40,9 @@ bool CTrigger::move(CUserCmd *pUserCmd)
 	if(local.isNull())
 		return false;
 
-	if(variables[5].get<bool>())
+	if(zoomedOnly)
 	{
-		if(gLocalPlayerVars.Class == tf_classes::TF2_Sniper)
+		if(gLocalPlayerVars.Class._to_integral() == tf_classes::TF2_Sniper)
 		{
 			if(!(gLocalPlayerVars.cond & tf_cond::TFCond_Zoomed))
 			{
@@ -64,7 +61,7 @@ bool CTrigger::move(CUserCmd *pUserCmd)
 
 	ray.Init(eyePos, forward);
 
-	//CTraceFilter filter{ local.castToPointer<CBaseEntity>( ) };
+	// CTraceFilter filter{ local.castToPointer<CBaseEntity>( ) };
 
 	CBaseFilter filt;
 
@@ -75,16 +72,16 @@ bool CTrigger::move(CUserCmd *pUserCmd)
 	if(!trace.m_pEnt)
 		return false;
 
-	if(!variables[1].bGet())
+	if(!hitAll)
 	{
-		if(variables[2].bGet())
+		if(useHitbox)
 		{
-			if(trace.hitbox != variables[3].iGet())
+			if(trace.hitbox != hitbox)
 				return false;
 		}
 		else
 		{
-			if(trace.hitGroup != variables[4].iGet())
+			if(trace.hitGroup != hitgroup)
 				return false;
 		}
 	}
@@ -96,7 +93,7 @@ bool CTrigger::move(CUserCmd *pUserCmd)
 
 	CEntity<> other{trace.m_pEnt->GetIndex()};
 
-	//if ( other->GetClientClass( )->iClassID != static_cast<int>( classId::CTFPlayer ) )
+	// if ( other->GetClientClass( )->iClassID != static_cast<int>( classId::CTFPlayer ) )
 	//	return false;
 
 	if(other->IsDormant())

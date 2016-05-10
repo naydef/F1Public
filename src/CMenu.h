@@ -13,20 +13,9 @@ class CMenu
 
 	//MenuType currType;
 
-	inline void closeSwitch(vecVars &vv)
+	inline int GetMenuHeight(int height)
 	{
-		for(auto &v : vv.vars)
-		{
-			// if there is an open switch
-			if(v.getType() == type_t::Switch && v.bGet())
-			{
-				// see if there are any open switches in that
-				closeSwitch(v.vars);
-
-				// close this current switch
-				v.bVal = false;
-			}
-		}
+		return height * hacks.size();
 	}
 
 public:

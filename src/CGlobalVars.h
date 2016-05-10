@@ -15,6 +15,9 @@ public:
 	DWORD iHealth;
 	DWORD iClass;
 	DWORD bReadyToBackstab;
+	DWORD rgflCoordinateFrame;
+	DWORD collision;
+	DWORD movetype;
 
 	DWORD iWeaponSlot;
 	DWORD iPlayerCond;
@@ -30,9 +33,11 @@ public:
 	DWORD flChargedDamage;
 	DWORD nTickBase;
 	DWORD flNextPrimaryAttack;
+	DWORD flLastFireTime;
 
 	DWORD hActiveWeapon;
 	DWORD hOwner;
+	DWORD bLowered;
 
 	DWORD iItemDefinitionIndex;
 };
@@ -43,17 +48,18 @@ public:
 	DWORD dwWriteUserCmd;
 	enum
 	{
-		createMoveOffset = 21, 
-		paintTraverseOffset = 41, 
-		keyEvent = 20,
+		createMoveOffset			 = 21,
+		paintTraverseOffset		  = 41,
+		keyEvent					 = 20,
 		writeUserCmdToBufferOffset = 23,
-		processGetCvarValue = 28, 
-		processSetConVar = 3,
-		getUserCmdOffset = 8,
-		runCommandOffset = 17,
-		dispatchUserMessageOffset = 36,
-		emitSound = 4,
-		frameStageNotify = 35,
+		processGetCvarValue		  = 28,
+		processSetConVar			 = 3,
+		getUserCmdOffset			 = 8,
+		runCommandOffset			 = 17,
+		dispatchUserMessageOffset  = 36,
+		emitSound					= 4,
+		frameStageNotify			 = 35,
+		isPlayingBack				= 5,
+		playSound					= 78,
 	};
-
 };

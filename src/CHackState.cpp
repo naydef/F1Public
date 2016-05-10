@@ -81,6 +81,8 @@ void HState::init()
 
 		gInts.Prediction = ClientFactory.get<CPrediction *>("VClientPrediction001");
 
+		gInts.GameMovement = ClientFactory.get<IGameMovement *>("GameMovement001");
+
 		// == ENGINE ==
 		auto EngineFactory = srcFactory(GetProcAddress(gSignatures.GetModuleHandleSafe("engine.dll"), "CreateInterface"));
 
@@ -91,6 +93,8 @@ void HState::init()
 		gInts.EngineTrace = EngineFactory.get<CEngineTrace *>("EngineTraceClient003");
 
 		gInts.RandomStream = EngineFactory.get<CUniformRandomStream *>("VEngineRandom001");
+
+		gInts.DebugOverlay = EngineFactory.get<IVDebugOverlay *>("VDebugOverlay003");
 
 		// == VGUI ==
 		auto VGUIFactory = srcFactory(GetProcAddress(gSignatures.GetModuleHandleSafe(XorString("vguimatsurface.dll")), XorString("CreateInterface")));
@@ -138,10 +142,10 @@ void HState::init()
 		gInts.Input		  = **reinterpret_cast<CInput ***>(dwInputPointer);
 
 		// hook getusercmd from CInput
-		//VMTBaseManager *inputHook = new VMTBaseManager();
-		//inputHook->Init(gInts.Input);
-		//inputHook->HookMethod(&Hooked_GetUserCmd, gOffsets.getUserCmdOffset);
-		//inputHook->Rehook();
+		VMTBaseManager *inputHook = new VMTBaseManager();
+		inputHook->Init(gInts.Input);
+		inputHook->HookMethod(&Hooked_GetUserCmd, gOffsets.getUserCmdOffset);
+		inputHook->Rehook();
 
 		// update the status
 		HState::instance()->addStatus(hackStatus::baseInited);
