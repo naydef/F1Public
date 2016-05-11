@@ -14,6 +14,9 @@
 #include "CNoise.h"
 #include "CAimbot.h"
 #include "CAutoAirblast.h"
+#include "CAnnouncer.h"
+#include "CNospread.h"
+#include "CPureBypass.h"
 
 CScreenSize gScreenSize;
 
@@ -134,7 +137,7 @@ void CHack::paintTraverse(PVOID pPanels, int edx, unsigned int vguiPanel, bool f
 //===================================================================================
 
 // for commands and movement
-bool CHack::createMove(PVOID ClientMode, int edx, float input_sample_frametime, CUserCmd *pUserCmd)
+bool CHack::createMove(PVOID ClientMode, int edx, float input_sample_frametime, CUserCmd *pUserCmd, DWORD createMoveEBP)
 {
 	_TRY
 	{
@@ -235,11 +238,13 @@ bool CHack::createMove(PVOID ClientMode, int edx, float input_sample_frametime, 
 			else
 				break;
 		}
+
 	}
 	_CATCHMODULE
 	{
 		Log::Error("%s", e.what());
 	}
+	_CATCH_SEH_REPORT_ERROR(this, createMove())
 
 	return false;
 }
@@ -293,6 +298,9 @@ void CHack::intro()
 			men.addHack(new CNoise());
 			men.addHack(new CAimbot());
 			men.addHack(new CAutoAirblast());
+			men.addHack(new CAnnouncer());
+			men.addHack(new CNospread());
+			men.addHack(new CPureBypass());
 		}
 		_CATCH
 		{

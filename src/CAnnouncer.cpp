@@ -2,7 +2,7 @@
 
 #include "SDK.h"
 
-// girs stuff
+// girs stuff - huge creds to him for this
 
 bool CAnnouncer::init(void)
 {
@@ -15,8 +15,8 @@ bool CAnnouncer::init(void)
 
 void CAnnouncer::FireGameEvent(IGameEvent *event)
 {
-	// Log::Console("%s Attacker: %i CustomKill: %i Me: %i Userid: %i Inflictor: %i Time: %f", event->GetName(), event->GetInt("attacker", 0),
-	// event->GetInt("customkill", 0), me, event->GetInt("userid", 0), event->GetInt("inflictor_entindex", 0), gInts.Globals->curtime);
+	Log::Console("%s Attacker: %i CustomKill: %i Me: %i Userid: %i Inflictor: %i Time: %f", event->GetName(), event->GetInt("attacker", 0),
+				 event->GetInt("customkill", 0), me, event->GetInt("userid", 0), event->GetInt("inflictor_entindex", 0), gInts.Globals->curtime);
 	if(gLocalPlayerVars.info.userID == 0) // CBasePlayer::GetUserId() You can get this from the player_info_t struct as well.
 		return;
 

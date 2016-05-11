@@ -42,6 +42,12 @@ public:
 // defined in the cpp
 void sehTranslator(unsigned int code, EXCEPTION_POINTERS *e);
 
+void terminateHandler();
+
+void unexpectedHandler();
+
+LONG WINAPI unhandledSehExceptionHandler(EXCEPTION_POINTERS *e);
+
 #define _TRYCATCH
 
 // stuff for try and catch
@@ -56,7 +62,7 @@ void sehTranslator(unsigned int code, EXCEPTION_POINTERS *e);
 	throw e
 #define _CATCH_SEH catch(sehException e)
 #define _CATCH_SEH_REPORT_ERROR(Class, funcName) \
-  _CATCH_SEH { Log::Error("An SEH exception\n(name: %s | id=0x%X)\nwas raised from %s::%s", "UNKNOWN", e.errCode, typeid(*Class).name(), #funcName); }
+	_CATCH_SEH { Log::Error("An SEH exception\n(name: %s | id=0x%X)\nwas raised from %s::%s", "UNKNOWN", e.errCode, typeid(*Class).name(), #funcName); }
 #define _INSTALL_SEH_TRANSLATOR() _set_se_translator(&sehTranslator) // this must be called within a try statement
 
 #else

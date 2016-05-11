@@ -29,7 +29,7 @@ public:
 	// for drawing on screen
 	void paintTraverse(PVOID pPanels, int edx, unsigned int vguiPanel, bool forceRepaint, bool allowForce); // take all variables from parent...
 	// for commands and movement
-	bool createMove(PVOID ClientMode, int edx, float input_sample_frametime, CUserCmd *pCommand); // take all variables from parent and return to parent (for silent aim later)
+	bool createMove(PVOID ClientMode, int edx, float input_sample_frametime, CUserCmd *pCommand, DWORD createMoveEBP); // take all variables from parent and return to parent (for silent aim later)
 	// set up draw manager and netvars
 	void intro();
 	// hooked in key event

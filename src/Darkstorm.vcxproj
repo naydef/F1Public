@@ -22,14 +22,14 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -102,6 +102,7 @@
   <ItemGroup>
     <ClCompile Include="bf_buffer.cpp" />
     <ClCompile Include="CAimbot.cpp" />
+    <ClCompile Include="CAnnouncer.cpp" />
     <ClCompile Include="CAutoAirblast.cpp" />
     <ClCompile Include="CBackstab.cpp" />
     <ClCompile Include="CMisc.cpp" />
@@ -113,6 +114,8 @@
     <ClCompile Include="CGlobalVars.cpp" />
     <ClCompile Include="CMenu.cpp" />
     <ClCompile Include="CNoise.cpp" />
+    <ClCompile Include="CNospread.cpp" />
+    <ClCompile Include="CPureBypass.cpp" />
     <ClCompile Include="crc32.cpp" />
     <ClCompile Include="CTrigger.cpp" />
     <ClCompile Include="DLLMain.cpp" />
@@ -132,6 +135,7 @@
     <ClInclude Include="bitvec.h" />
     <ClInclude Include="bspflags.h" />
     <ClInclude Include="CAimbot.h" />
+    <ClInclude Include="CAnnouncer.h" />
     <ClInclude Include="CAutoAirblast.h" />
     <ClInclude Include="CBackstab.h" />
     <ClInclude Include="CMisc.h" />
@@ -144,8 +148,10 @@
     <ClInclude Include="Client.h" />
     <ClInclude Include="CMenu.h" />
     <ClInclude Include="CNoise.h" />
+    <ClInclude Include="CNospread.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="CEntity.h" />
+    <ClInclude Include="CPureBypass.h" />
     <ClInclude Include="crc32.h" />
     <ClInclude Include="CTrigger.h" />
     <ClInclude Include="CUtlLinkedList.h" />

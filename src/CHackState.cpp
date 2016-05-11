@@ -94,6 +94,8 @@ void HState::init()
 
 		gInts.RandomStream = EngineFactory.get<CUniformRandomStream *>("VEngineRandom001");
 
+		gInts.EventManager = EngineFactory.get<IGameEventManager2 *>("GAMEEVENTSMANAGER002");
+
 		gInts.DebugOverlay = EngineFactory.get<IVDebugOverlay *>("VDebugOverlay003");
 
 		// == VGUI ==
@@ -136,6 +138,7 @@ void HState::init()
 		VMTBaseManager *CHLClientHook = new VMTBaseManager(); // set up for chlclient.
 		CHLClientHook->Init(gInts.Client);
 		CHLClientHook->HookMethod(&Hooked_Key_Event, gOffsets.keyEvent); // hook in key event.
+		CHLClientHook->HookMethod(&Hooked_CHLClient_CreateMove, gOffsets.createMoveOffset);
 		CHLClientHook->Rehook();
 
 		DWORD dwInputPointer = (gSignatures.dwFindPattern((DWORD)CHLClientHook->GetMethod<DWORD>(gOffsets.createMoveOffset), ((DWORD)CHLClientHook->GetMethod<DWORD>(gOffsets.createMoveOffset)) + 0x100, "8B 0D")) + (0x2); //Find the pointer to CInput in CHLClient::CreateMove.

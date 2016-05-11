@@ -28,6 +28,12 @@ BOOL APIENTRY DllMain(HMODULE hInstance, DWORD dwReason, LPVOID lpReserved)
 
 		gInts.thisDll = hInstance;
 
+		std::set_terminate(terminateHandler);
+
+		std::set_unexpected(unexpectedHandler);
+
+		SetUnhandledExceptionFilter(unhandledSehExceptionHandler);
+
 		// call our init
 		CreateThread(0, 0, (LPTHREAD_START_ROUTINE)&HState::init, 0, 0, 0);
 	}
