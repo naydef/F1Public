@@ -37,8 +37,6 @@ void CHack::paintTraverse(PVOID pPanels, int edx, unsigned int vguiPanel, bool f
 	{
 		_INSTALL_SEH_TRANSLATOR();
 
-		gInts.DebugOverlay->ClearAllOverlays();
-
 		VMTManager &hook = VMTManager::GetHook(pPanels);																								 //Get a pointer to the instance of your VMTManager with the function GetHook.
 		hook.GetMethod<void(__thiscall *)(PVOID, unsigned int, bool, bool)>(gOffsets.paintTraverseOffset)(pPanels, vguiPanel, forceRepaint, allowForce); //Call the original.
 
@@ -57,6 +55,9 @@ void CHack::paintTraverse(PVOID pPanels, int edx, unsigned int vguiPanel, bool f
 
 		if(vguiMatSystemTopPanel == vguiPanel) //If we're on MatSystemTopPanel, call our drawing code.
 		{
+
+			gInts.DebugOverlay->ClearAllOverlays();
+
 			if(gInts.Engine->IsDrawingLoadingImage() || !gInts.Engine->IsInGame() || !gInts.Engine->IsConnected() || gInts.Engine->Con_IsVisible() || ((GetAsyncKeyState(VK_F12) || gInts.Engine->IsTakingScreenshot())))
 				return; //We don't want to draw at the menu.
 
