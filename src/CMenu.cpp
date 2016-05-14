@@ -131,7 +131,7 @@ void CMenu::menu()
 	try
 	{
 
-		Log::Console("iIndex == %d", iIndex);
+		//Log::Console("iIndex == %d", iIndex);
 
 		int x	 = 0,
 			menux = 300,
