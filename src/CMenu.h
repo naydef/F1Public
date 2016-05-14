@@ -15,7 +15,15 @@ class CMenu
 
 	inline int GetMenuHeight(int height)
 	{
-		return height * hacks.size();
+		int inc;
+		for(auto &h : hacks)
+		{
+			if(!h->variables.empty())
+			{
+				inc += height;
+			}
+		}
+		return inc;
 	}
 
 public:
@@ -38,6 +46,7 @@ public:
 	}
 
 	std::vector<IHack *> hacks; // TODO refactor later
+	//std::vector<int> skipped;
 	int iIndex;					// current hack vector index
 	//int iiIndex;				// inside i index
 	bool bMenuActive;			// menu active

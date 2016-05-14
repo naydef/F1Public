@@ -8,7 +8,10 @@ int CMenu::keyEvent(ButtonCode_t keynum)
 		flipMenu();
 		if(activeVars == nullptr)
 			if(hacks.size() != 0)
+			{
 				activeVars = &hacks[0]->variables;
+				iIndex = 0;
+			}
 
 		gInts.Surface->PlaySound("UI/buttonclick.wav");
 	}
@@ -60,11 +63,18 @@ int CMenu::keyEvent(ButtonCode_t keynum)
 			break;
 
 		case ButtonCode_t::KEY_TAB:
-			if(iIndex < hacks.size() - 1)
-				iIndex++;
-			else if(iIndex == hacks.size() - 1)
-				iIndex = 0;
+			// try to find the first empty hack
+			int newIndex;
+			newIndex = iIndex;
+			do
+			{
+				if(newIndex < hacks.size() - 1)
+					newIndex += 1;
+				else if(newIndex == hacks.size() - 1)
+					newIndex = 0;
+			} while(hacks[newIndex]->variables.empty());
 
+			iIndex = newIndex;
 			// close all active switches
 			activeVars->closeSwitch();
 
@@ -120,6 +130,9 @@ void CMenu::menu()
 		return;
 	try
 	{
+
+		Log::Console("iIndex == %d", iIndex);
+
 		int x	 = 0,
 			menux = 300,
 			y	 = 300,
@@ -143,25 +156,28 @@ void CMenu::menu()
 
 		for(auto &hack : hacks)
 		{
-			CDrawManager::font_size_t size = gDrawManager.GetPixelTextSize("hud", hack->name());
 			//size.length += 2;
 			//size.height = h + 2;
-			if(curr == iIndex)
+			if(!hack->variables.empty())
 			{
-				//gDrawManager.DrawRect(x, y + yy, size.length, size.height, COLOR_BLACK);
-				//gDrawManager.OutlineRect(x, y + yy, size.length, size.height, COLOR_MENU_OFF);
-				gDrawManager.DrawString("menuMain", x + 2, y + yy + 1, COLOR_MENU_OFF, hack->name());
-			}
-			else
-			{
-				//gDrawManager.DrawRect(x, y + yy, size.length, size.height, COLOR_BLACK);
-				//gDrawManager.OutlineRect(x, y + yy, size.length, size.height, menuColor);
-				gDrawManager.DrawString("menuMain", x + 2, y + yy + 2, menuColor, hack->name());
-			}
-			yy += menuMainHeight;
-			curr++;
+				if(curr == iIndex)
+				{
+					//gDrawManager.DrawRect(x, y + yy, size.length, size.height, COLOR_BLACK);
+					//gDrawManager.OutlineRect(x, y + yy, size.length, size.height, COLOR_MENU_OFF);
+					gDrawManager.DrawString("menuMain", x + 2, y + yy + 1, COLOR_MENU_OFF, hack->name());
+				}
+				else
+				{
+					//gDrawManager.DrawRect(x, y + yy, size.length, size.height, COLOR_BLACK);
+					//gDrawManager.OutlineRect(x, y + yy, size.length, size.height, menuColor);
+					gDrawManager.DrawString("menuMain", x + 2, y + yy + 2, menuColor, hack->name());
+				}
+				yy += menuMainHeight;
+				curr++;
 
-			menux = max(menux, size.length);
+				CDrawManager::font_size_t size = gDrawManager.GetPixelTextSize("hud", hack->name());
+				menux = max(menux, size.length);
+			}
 		}
 
 		int xx = menux + 170;

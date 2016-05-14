@@ -12,6 +12,7 @@ public:
 	CAnnouncer()
 	{
 		killStreakTimeout = 4.0f;
+		memset(&chKillstreakSound, 0, sizeof(chKillstreakSound));
 	}
 
 	// IGameEventListener2 inherits
@@ -29,7 +30,7 @@ public:
 
 private:
 	void PlaySound(const char *soundFile);
-	char chKillstreakSound[50] = "";
+	char chKillstreakSound[50];
 
 protected:
 	float lastKillTime;

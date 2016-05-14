@@ -7,14 +7,14 @@
 bool __fastcall Hooked_CreateMove(PVOID ClientMode, int edx, float input_sample_frametime, CUserCmd *pCommand)
 {
 
-	void *EBP;
+	//void *EBP;
 
 	// move ebp register into EBP
-	__asm mov EBP, ebp;
+	//__asm mov EBP, ebp;
 
 	// dereference EBP to get the CHLCLient Createmove
 
-	DWORD createMoveEBP = ***(DWORD ***) EBP;
+	DWORD createMoveEBP = NULL;
 
 	return gHack.createMove(ClientMode, edx, input_sample_frametime, pCommand, createMoveEBP);
 }

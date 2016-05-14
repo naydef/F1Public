@@ -161,6 +161,8 @@ bool CHack::createMove(PVOID ClientMode, int edx, float input_sample_frametime, 
 		gLocalPlayerVars.health = local.get<int>(gEntVars.iHealth);
 		gLocalPlayerVars.team   = local.get<int>(gEntVars.iTeam);
 		gLocalPlayerVars.cmdNum = pUserCmd->command_number;
+		gLocalPlayerVars.info   = gInts.Engine->GetPlayerInfo(me);
+		gLocalPlayerVars.flags  = local.get<int>(gEntVars.iFlags);
 
 		CBaseEntity *pLocalWep = gInts.EntList->GetClientEntity(HANDLE2INDEX(local.get<int>(gEntVars.hActiveWeapon)));
 
@@ -299,8 +301,8 @@ void CHack::intro()
 			men.addHack(new CNoise());
 			men.addHack(new CAimbot());
 			men.addHack(new CAutoAirblast());
+			//men.addHack(new CNospread());
 			men.addHack(new CAnnouncer());
-			men.addHack(new CNospread());
 			men.addHack(new CPureBypass());
 		}
 		_CATCH

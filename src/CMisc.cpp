@@ -32,7 +32,7 @@ bool CMisc::move(CUserCmd *pUserCmd)
 		if(pUserCmd->buttons & IN_JUMP)
 			if(!firstjump)
 				firstjump = fakejmp = 1;
-			else if(!(local.get<int>(gEntVars.iFlags) & FL_ONGROUND))
+			else if(!(gLocalPlayerVars.flags & FL_ONGROUND))
 				if(fakejmp)
 					fakejmp = 0;
 				else

@@ -27,6 +27,7 @@ struct vecVars
 	std::vector<var> vars;
 	int index;
 	bool open;
+	bool e;
 	vecVars *parent;
 
 	vecVars()
@@ -46,6 +47,11 @@ struct vecVars
 	void push_back(const var &v)
 	{
 		return vars.push_back(v);
+	}
+
+	bool empty()
+	{
+		return e = (vars.size() == 0);
 	}
 
 	size_t size()

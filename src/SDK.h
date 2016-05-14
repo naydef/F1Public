@@ -1211,6 +1211,7 @@ typedef struct playerVars_s
 	player_info_t info;
 	predictedVars_t pred;
 	Vector viewOffset;
+	int flags;
 } playerVars_t;
 //===================================================================================================
 extern CInterfaces gInts;
