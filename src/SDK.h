@@ -16,42 +16,25 @@
 #include "bf_buffer.h"
 #include "random.h"
 #include "IConvar.h"
-//#include "CPlayerResource.h"
+#include "network.h"
+//#include "DebugOverlay.h"
 
 class CGameTrace;
 typedef CGameTrace trace_t;
+struct Ray_t;
 class CEngineTrace;
 class IUniformRandomStream;
 class CPlayerResource;
 
 typedef void *(*InstallUniformRandomStreamFn)(IUniformRandomStream *pStream);
 
-#define VMTManager toolkit::VMTManager
-#define VMTBaseManager toolkit::VMTBaseManager
-
-using CHandle = int;
-
-// useless here?
+using namespace toolkit;
 
 #pragma optimize("gsy", on)
-#pragma warning(disable : 4244)			//Possible loss of data
+#pragma warning(disable : 4244)			// Possible loss of data
 #pragma comment(lib, "steamclient.lib") // use steamclient as thats where we are getting createinterface from!
 
 typedef float matrix3x4[3][4];
-//===================================================================================================
-#define me gInts.Engine->GetLocalPlayer()
-#define MASK_AIMBOT 0x200400B
-#define CONTENTS_HITBOX 0x40000000
-#define CH_MASK 0x4600400B
-#define PI 3.14159265358979323846f
-#define square(x) (x * x)
-#define RADPI 57.295779513082f
-#define SQUARE(a) a *a
-#define BLU_TEAM 3
-#define RED_TEAM 2
-#define FL_ONGROUND (1 << 0)
-#define FL_DUCKING (1 << 1)
-#define HANDLE2INDEX(handle) (handle & 0xFFF)
 //===================================================================================================
 typedef struct player_info_s
 {
@@ -71,8 +54,9 @@ class CHLClient
 public:
 	ClientClass *GetAllClasses(void)
 	{
-		typedef ClientClass *(__thiscall * OriginalFn)(PVOID); //Anything inside a VTable is a __thiscall unless it completly disregards the thisptr. You can also call them as __stdcalls, but you won't have access to the __thisptr.
-		return getvfunc<OriginalFn>(this, 8)(this);			   //Return the pointer to the head CClientClass.
+		typedef ClientClass *(__thiscall * OriginalFn)(PVOID); // Anything inside a VTable is a __thiscall unless it completly disregards the thisptr. You can
+															   // also call them as __stdcalls, but you won't have access to the __thisptr.
+		return getvfunc<OriginalFn>(this, 8)(this);			   // Return the pointer to the head CClientClass.
 	}
 };
 //===================================================================================================
@@ -110,21 +94,41 @@ public:
 		mousedy		  = 0;
 		hasbeenpredicted = false;
 	}
-	virtual ~CUserCmd(){}; //Destructor 0
-	int command_number;	//4
-	int tick_count;		   //8
-	Vector viewangles;	 //C
-	float forwardmove;	 //18
-	float sidemove;		   //1C
-	float upmove;		   //20
-	int buttons;		   //24
-	BYTE impulse;		   //28
-	int weaponselect;	  //2C
-	int weaponsubtype;	 //30
-	int random_seed;	   //34
-	short mousedx;		   //38
-	short mousedy;		   //3A
-	bool hasbeenpredicted; //3C;
+
+	void copyFrom(const CUserCmd &src)
+	{
+		command_number = src.command_number;
+		tick_count = src.tick_count;
+		viewangles = src.viewangles;
+		forwardmove = src.forwardmove;
+		sidemove = src.sidemove;
+		upmove = src.upmove;
+		buttons = src.buttons;
+		impulse = src.impulse;
+		weaponselect = src.weaponselect;
+		weaponsubtype = src.weaponsubtype;
+		random_seed = src.random_seed;
+		mousedx = src.mousedx;
+		mousedy = src.mousedy;
+
+		hasbeenpredicted = src.hasbeenpredicted;
+	}
+
+	virtual ~CUserCmd(){}; // Destructor 0
+	int command_number;	// 4
+	int tick_count;		   // 8
+	Vector viewangles;	 // C
+	float forwardmove;	 // 18
+	float sidemove;		   // 1C
+	float upmove;		   // 20
+	int buttons;		   // 24
+	BYTE impulse;		   // 28
+	int weaponselect;	  // 2C
+	int weaponsubtype;	 // 30
+	int random_seed;	   // 34
+	short mousedx;		   // 38
+	short mousedy;		   // 3A
+	bool hasbeenpredicted; // 3C;
 };
 //===================================================================================================
 class CVerifiedUserCmd
@@ -168,9 +172,76 @@ struct mstudiohitboxset_t
 	mstudiobbox_t *pHitbox(int i) const { return (mstudiobbox_t *)(((BYTE *)this) + hitboxindex) + i; };
 };
 //===================================================================================================
+class ICollideable
+{
+public:
+	// Gets at the entity handle associated with the collideable
+	virtual void		*GetEntityHandle() = 0;
+
+	// These methods return the bounds of an OBB measured in "collision" space
+	// which can be retreived through the CollisionToWorldTransform or
+	// GetCollisionOrigin/GetCollisionAngles methods
+	virtual const Vector&	OBBMinsPreScaled() const = 0;
+	virtual const Vector&	OBBMaxsPreScaled() const = 0;
+	virtual const Vector&	OBBMins() const = 0;
+	virtual const Vector&	OBBMaxs() const = 0;
+
+	// Returns the bounds of a world-space box used when the collideable is being traced
+	// against as a trigger. It's only valid to call these methods if the solid flags
+	// have the FSOLID_USE_TRIGGER_BOUNDS flag set.
+	virtual void			WorldSpaceTriggerBounds(Vector *pVecWorldMins, Vector *pVecWorldMaxs) const = 0;
+
+	// custom collision test
+	virtual bool			TestCollision(const Ray_t &ray, unsigned int fContentsMask, trace_t& tr) = 0;
+
+	// Perform hitbox test, returns true *if hitboxes were tested at all*!!
+	virtual bool			TestHitboxes(const Ray_t &ray, unsigned int fContentsMask, trace_t& tr) = 0;
+
+	// Returns the BRUSH model index if this is a brush model. Otherwise, returns -1.
+	virtual int				GetCollisionModelIndex() = 0;
+
+	// Return the model, if it's a studio model.
+	virtual const void*	GetCollisionModel() = 0;
+
+	// Get angles and origin.
+	virtual const Vector&	GetCollisionOrigin() const = 0;
+	virtual const Vector&	GetCollisionAngles() const = 0;
+	virtual const matrix3x4&	CollisionToWorldTransform() const = 0;
+
+	// Return a SOLID_ define.
+	virtual /*SolidType_t*/int GetSolid() const = 0;
+	virtual int				GetSolidFlags() const = 0;
+
+	// Gets at the containing class...
+	virtual CBaseEntity*	GetIClientUnknown() = 0;
+
+	// We can filter out collisions based on collision group
+	virtual int				GetCollisionGroup() const = 0;
+
+	// Returns a world-aligned box guaranteed to surround *everything* in the collision representation
+	// Note that this will surround hitboxes, trigger bounds, physics.
+	// It may or may not be a tight-fitting box and its volume may suddenly change
+	virtual void			WorldSpaceSurroundingBounds(Vector *pVecMins, Vector *pVecMaxs) = 0;
+
+	virtual bool			ShouldTouchTrigger(int triggerSolidFlags) const = 0;
+
+	// returns NULL unless this collideable has specified FSOLID_ROOT_PARENT_ALIGNED
+	virtual const matrix3x4	*GetRootParentToWorldTransform() const = 0;
+};
+//===================================================================================================
 class CBaseEntity
 {
 public:
+	CBaseHandle GetRefEHandle()
+	{
+		typedef CBaseHandle(__thiscall *OriginalFn)(PVOID);
+		return getvfunc<OriginalFn>(this, 1)(this);
+	}
+	ICollideable *GetCollideable()
+	{
+		typedef ICollideable *(__thiscall *OriginalFn)(PVOID);
+		return getvfunc<OriginalFn>(this, 2)(this);
+	}
 	Vector &GetAbsOrigin()
 	{
 		typedef Vector &(__thiscall * OriginalFn)(PVOID);
@@ -229,58 +300,12 @@ public:
 		typedef void(__thiscall * OriginalFn)(PVOID, Vector &, Vector &);
 		getvfunc<OriginalFn>(pRenderable, 20)(pRenderable, mins, maxs);
 	}
-};
-//===================================================================================================
-class INetChannelInfo
-{
-public:
-	enum
+	Vector &GetPrevLocalAngles()
 	{
-		GENERIC = 0,  // must be first and is default group
-		LOCALPLAYER,  // bytes for local player entity update
-		OTHERPLAYERS, // bytes for other players update
-		ENTITIES,	 // all other entity bytes
-		SOUNDS,		  // game sounds
-		EVENTS,		  // event messages
-		USERMESSAGES, // user messages
-		ENTMESSAGES,  // entity messages
-		VOICE,		  // voice data
-		STRINGTABLE,  // a stringtable update
-		MOVE,		  // client move cmds
-		STRINGCMD,	// string command
-		SIGNON,		  // various signondata
-		TOTAL,		  // must be last and is not a real group
-	};
-
-	virtual const char *GetName(void) const = 0;	// get channel name
-	virtual const char *GetAddress(void) const = 0; // get channel IP address as string
-	virtual float GetTime(void) const = 0;			// current net time
-	virtual float GetTimeConnected(void) const = 0; // get connection time in seconds
-	virtual int GetBufferSize(void) const = 0;		// netchannel packet history size
-	virtual int GetDataRate(void) const = 0;		// send data rate in byte/sec
-
-	virtual bool IsLoopback(void) const = 0;  // true if loopback channel
-	virtual bool IsTimingOut(void) const = 0; // true if timing out
-	virtual bool IsPlayback(void) const = 0;  // true if demo playback
-
-	virtual float GetLatency(int flow) const = 0;								   // current latency (RTT), more accurate but jittering
-	virtual float GetAvgLatency(int flow) const = 0;							   // average packet latency in seconds
-	virtual float GetAvgLoss(int flow) const = 0;								   // avg packet loss[0..1]
-	virtual float GetAvgChoke(int flow) const = 0;								   // avg packet choke[0..1]
-	virtual float GetAvgData(int flow) const = 0;								   // data flow in bytes/sec
-	virtual float GetAvgPackets(int flow) const = 0;							   // avg packets/sec
-	virtual int GetTotalData(int flow) const = 0;								   // total flow in/out in bytes
-	virtual int GetSequenceNr(int flow) const = 0;								   // last send seq number
-	virtual bool IsValidPacket(int flow, int frame_number) const = 0;			   // true if packet was not lost/dropped/chocked/flushed
-	virtual float GetPacketTime(int flow, int frame_number) const = 0;			   // time when packet was send
-	virtual int GetPacketBytes(int flow, int frame_number, int group) const = 0;   // group size of this packet
-	virtual bool GetStreamProgress(int flow, int *received, int *total) const = 0; // TCP progress if transmitting
-	virtual float GetTimeSinceLastReceived(void) const = 0;						   // get time since last recieved packet in seconds
-	virtual float GetCommandInterpolationAmount(int flow, int frame_number) const = 0;
-	virtual void GetPacketResponseLatency(int flow, int frame_number, int *pnLatencyMsecs, int *pnChoke) const = 0;
-	virtual void GetRemoteFramerate(float *pflFrameTime, float *pflFrameTimeStdDeviation) const = 0;
-
-	virtual float GetTimeoutSeconds() const = 0;
+		typedef Vector&(__thiscall *OriginalFn)(PVOID);
+		// could be 66
+		return getvfunc<OriginalFn>(this, 142)(this);
+	}
 };
 //===================================================================================================
 class EngineClient
@@ -299,20 +324,17 @@ public:
 			RECT size;
 
 			// get the desktop window, it should have the same res as the fullscreen window
-			HWND desktopWindow = GetDesktopWindow();
+			HWND desktopWindow = FindWindow(NULL, "Team Fortress 2");
 
-			if(desktopWindow)
-			{
-				GetWindowRect(desktopWindow, &size);
+			GetWindowRect(desktopWindow, &size);
 
-				width  = size.right - size.left;
-				height = size.bottom - size.top;
+			width  = size.right - size.left;
+			height = size.bottom - size.top;
 
-				//Log::Console("Right: %d, Left: %d", size.right, size.left);
-				//Log::Console("Bottom: %d, Top: %d", size.bottom, size.top);
+			Log::Console("Right: %d, Left: %d", size.right, size.left);
+			Log::Console("Bottom: %d, Top: %d", size.bottom, size.top);
 
-				//Log::Console("Height: %d, width: %d", height, width);
-			}
+			Log::Console("Height: %d, width: %d", height, width);
 		}
 	}
 	bool GetPlayerInfo(int ent_num, player_info_t *pinfo)
@@ -320,6 +342,13 @@ public:
 		typedef bool(__thiscall * OriginalFn)(PVOID, int, player_info_t *);
 		return getvfunc<OriginalFn>(this, 8)(this, ent_num, pinfo);
 	}
+	player_info_t GetPlayerInfo(int ent_num)
+	{
+		player_info_t tempInfo;
+		GetPlayerInfo(ent_num, &tempInfo);
+		return tempInfo;
+	}
+
 	bool Con_IsVisible(void)
 	{
 		typedef bool(__thiscall * OriginalFn)(PVOID);
@@ -395,6 +424,11 @@ public:
 		typedef void(__thiscall * OriginalFn)(PVOID, PVOID);
 		return getvfunc<OriginalFn>(this, 127)(this, keyval);
 	}
+	void ServerCmdKeyValues(KeyValues *keyval)
+	{
+		// call the other one
+		return ServerCmdKeyValues((PVOID)keyval);
+	}
 };
 //===================================================================================================
 class IPanel
@@ -425,6 +459,11 @@ public:
 		typedef void(__thiscall * OriginalFn)(PVOID, int, int, int, int);
 		getvfunc<OriginalFn>(this, 14)(this, x0, y0, x1, y1);
 	}
+	void DrawOutlinedCircle(int x, int y, int radius, int segments)
+	{
+		typedef void(__thiscall *OriginalFn)(PVOID, int, int, int, int);
+		return getvfunc<OriginalFn>(this, 99)(this, x, y, radius, segments);
+	}
 	void DrawLine(int x0, int y0, int x1, int y1)
 	{
 		typedef void(__thiscall * OriginalFn)(PVOID, int, int, int, int);
@@ -435,6 +474,7 @@ public:
 		typedef void(__thiscall * OriginalFn)(PVOID, int *, int *, int);
 		getvfunc<OriginalFn>(this, 16)(this, x, y, n);
 	}
+
 	void DrawSetTextFont(unsigned long font)
 	{
 		typedef void(__thiscall * OriginalFn)(PVOID, unsigned long);
@@ -470,6 +510,42 @@ public:
 		typedef void(__thiscall * OriginalFn)(PVOID, unsigned long, const wchar_t *, int &, int &);
 		getvfunc<OriginalFn>(this, 75)(this, font, text, wide, tall);
 	}
+
+	void PlaySound(const char *sound)
+	{
+		typedef void(__thiscall * OriginalFn)(PVOID, const char *);
+		return getvfunc<OriginalFn>(this, 78)(this, sound);
+	}
+};
+//===================================================================================================
+class IVDebugOverlay
+{
+public:
+	virtual void AddEntityTextOverlay(int ent_index, int line_offset, float duration, int r, int g, int b, int a, const char *format, ...) = 0;
+	virtual void AddBoxOverlay(const Vector& origin, const Vector& mins, const Vector& max, Vector const& orientation, int r, int g, int b, int a, float duration) = 0;
+	virtual void AddTriangleOverlay(const Vector& p1, const Vector& p2, const Vector& p3, int r, int g, int b, int a, bool noDepthTest, float duration) = 0;
+	virtual void AddLineOverlay(const Vector& origin, const Vector& dest, int r, int g, int b, bool noDepthTest, float duration) = 0;
+	virtual void AddTextOverlay(const Vector& origin, float duration, const char *format, ...) = 0;
+	virtual void AddTextOverlay(const Vector& origin, int line_offset, float duration, const char *format, ...) = 0;
+	virtual void AddScreenTextOverlay(float flXPos, float flYPos, float flDuration, int r, int g, int b, int a, const char *text) = 0;
+	virtual void AddSweptBoxOverlay(const Vector& start, const Vector& end, const Vector& mins, const Vector& max, const Vector & angles, int r, int g, int b, int a, float flDuration) = 0;
+	virtual void AddGridOverlay(const Vector& origin) = 0;
+	virtual int ScreenPosition(const Vector& point, Vector& screen) = 0;
+	virtual int ScreenPosition(float flXPos, float flYPos, Vector& screen) = 0;
+
+	virtual /*OverlayText_t*/ int *GetFirst(void) = 0;
+	virtual /*OverlayText_t*/ int *GetNext(/*OverlayText_t*/ int *current) = 0;
+	virtual void ClearDeadOverlays(void) = 0;
+	virtual void ClearAllOverlays() = 0;
+
+	virtual void AddTextOverlayRGB(const Vector& origin, int line_offset, float duration, float r, float g, float b, float alpha, const char *format, ...) = 0;
+	virtual void AddTextOverlayRGB(const Vector& origin, int line_offset, float duration, int r, int g, int b, int a, const char *format, ...) = 0;
+
+	virtual void AddLineOverlayAlpha(const Vector& origin, const Vector& dest, int r, int g, int b, int a, bool noDepthTest, float duration) = 0;
+	virtual void AddBoxOverlay2(const Vector& origin, const Vector& mins, const Vector& max, Vector const& orientation, const Color& faceColor, const Color& edgeColor, float duration) = 0;
+
+private:
+	inline void AddTextOverlay(const Vector& origin, int line_offset, float duration, int r, int g, int b, int a, const char *format, ...) {} /* catch improper use of bad interface. Needed because '0' duration can be resolved by compiler to NULL format string (i.e., compiles but calls wrong function) */
 };
 //===================================================================================================
 class CEntList
@@ -480,9 +556,9 @@ public:
 		typedef CBaseEntity *(__thiscall * OriginalFn)(PVOID, int);
 		return getvfunc<OriginalFn>(this, 3)(this, entnum);
 	}
-	CBaseEntity *GetClientEntityFromHandle(CHandle hEnt)
+	CBaseEntity *GetClientEntityFromHandle(CBaseHandle hEnt)
 	{
-		typedef CBaseEntity *(__thiscall * OriginalFn)(PVOID, int);
+		typedef CBaseEntity *(__thiscall * OriginalFn)(PVOID, CBaseHandle);
 		return getvfunc<OriginalFn>(this, 4)(this, hEnt);
 	}
 	int GetHighestEntityIndex(void)
@@ -490,6 +566,33 @@ public:
 		typedef int(__thiscall * OriginalFn)(PVOID);
 		return getvfunc<OriginalFn>(this, 6)(this);
 	}
+};
+//===================================================================================================
+class IPhysicsSurfaceProps
+{
+public:
+	virtual ~IPhysicsSurfaceProps(void) {}
+
+	// parses a text file containing surface prop keys
+	virtual int		ParseSurfaceData(const char *pFilename, const char *pTextfile) = 0;
+	// current number of entries in the database
+	virtual int		SurfacePropCount(void) const = 0;
+
+	virtual int		GetSurfaceIndex(const char *pSurfacePropName) const = 0;
+	virtual void	GetPhysicsProperties(int surfaceDataIndex, float *density, float *thickness, float *friction, float *elasticity) const = 0;
+
+	virtual /*surfacedata_t*/ void *GetSurfaceData(int surfaceDataIndex) = 0;
+	virtual const char		*GetString(unsigned short stringTableIndex) const = 0;
+
+
+	virtual const char		*GetPropName(int surfaceDataIndex) const = 0;
+
+	// sets the global index table for world materials
+	// UNDONE: Make this per-CPhysCollide
+	virtual void	SetWorldMaterialIndexTable(int *pMapArray, int mapSize) = 0;
+
+	// NOTE: Same as GetPhysicsProperties, but maybe more convenient
+	virtual void	GetPhysicsParameters(int surfaceDataIndex, /*surfacephysicsparams_t*/ void *pParamsOut) const = 0;
 };
 //===================================================================================================
 class CBaseCombatWeapon
@@ -526,12 +629,25 @@ public:
 	}
 };
 //===================================================================================================
+class CTFBaseWeapon
+{
+public:
+	// TODO impl nessacary functions here
+
+	int getWeaponID()
+	{
+		typedef int(__thiscall *OriginalFn)(PVOID);
+		return getvfunc<OriginalFn>(this, 422)(this);
+	}
+};
+//===================================================================================================
 class CTFBaseWeaponGun
 {
 public:
 	float WeaponGetSpread()
 	{
-		typedef double(__thiscall * OriginalFn)(PVOID);
+		typedef float(__thiscall * OriginalFn)(PVOID);
+		// ida confirms 453
 		return getvfunc<OriginalFn>(this, 453)(this);
 	}
 };
@@ -648,73 +764,73 @@ enum playercontrols
 //===================================================================================================
 enum tf_cond : int
 {
-	TFCond_Slowed				= (1 << 0),  //Toggled when a player is slowed down.
-	TFCond_Zoomed				= (1 << 1),  //Toggled when a player is zoomed.
-	TFCond_Disguising			= (1 << 2),  //Toggled when a Spy is disguising.
-	TFCond_Disguised			 = (1 << 3),  //Toggled when a Spy is disguised.
-	TFCond_Cloaked			   = (1 << 4),  //Toggled when a Spy is invisible.
-	TFCond_Ubercharged		   = (1 << 5),  //Toggled when a player is uberCharged.
-	TFCond_TeleportedGlow		= (1 << 6),  //Toggled when someone leaves a teleporter and has glow beneath their feet.
-	TFCond_Taunting			  = (1 << 7),  //Toggled when a player is taunting.
-	TFCond_UberchargeFading	= (1 << 8),  //Toggled when the uberCharge is fading.
-	TFCond_CloakFlicker		  = (1 << 9),  //Toggled when a Spy is visible during cloak.
-	TFCond_Teleporting		   = (1 << 10), //Only activates for a brief second when the player is being teleported; not very useful.
-	TFCond_Kritzkrieged		  = (1 << 11), //Toggled when a player is being crit buffed by the KritzKrieg.
-	TFCond_TmpDamageBonus		= (1 << 12), //Unknown what this is for. Name taken from the AlliedModders SDK.
-	TFCond_DeadRingered		  = (1 << 13), //Toggled when a player is taking reduced damage from the Deadringer.
-	TFCond_Bonked				= (1 << 14), //Toggled when a player is under the effects of The Bonk! Atomic Punch.
-	TFCond_Stunned			   = (1 << 15), //Toggled when a player's speed is reduced from airblast or a Sandman ball.
-	TFCond_Buffed				= (1 << 16), //Toggled when a player is within range of an activated Buff Banner.
-	TFCond_Charging			  = (1 << 17), //Toggled when a Demoman charges with the shield.
-	TFCond_DemoBuff			  = (1 << 18), //Toggled when a Demoman has heads from the Eyelander.
-	TFCond_CritCola			  = (1 << 19), //Toggled when the player is under the effect of The Crit-a-Cola.
-	TFCond_InHealRadius		  = (1 << 20), //Unused condition, name taken from AlliedModders SDK.
-	TFCond_Healing			   = (1 << 21), //Toggled when someone is being healed by a medic or a dispenser.
-	TFCond_OnFire				= (1 << 22), //Toggled when a player is on fire.
-	TFCond_Overhealed			= (1 << 23), //Toggled when a player has >100% health.
-	TFCond_Jarated			   = (1 << 24), //Toggled when a player is hit with a Sniper's Jarate.
-	TFCond_Bleeding			  = (1 << 25), //Toggled when a player is taking bleeding damage.
-	TFCond_DefenseBuffed		 = (1 << 26), //Toggled when a player is within range of an activated Battalion's Backup.
-	TFCond_Milked				= (1 << 27), //Player was hit with a jar of Mad Milk.
-	TFCond_MegaHeal			  = (1 << 28), //Player is under the effect of Quick-Fix charge.
-	TFCond_RegenBuffed		   = (1 << 29), //Toggled when a player is within a Concheror's range.
-	TFCond_MarkedForDeath		= (1 << 30), //Player is marked for death by a Fan O'War hit. Effects are similar to TFCond_Jarated.
-	TFCond_NoHealingDamageBuff = (1 << 31), //Unknown what this is used for.
+	TFCond_Slowed				= (1 << 0),  // Toggled when a player is slowed down.
+	TFCond_Zoomed				= (1 << 1),  // Toggled when a player is zoomed.
+	TFCond_Disguising			= (1 << 2),  // Toggled when a Spy is disguising.
+	TFCond_Disguised			 = (1 << 3),  // Toggled when a Spy is disguised.
+	TFCond_Cloaked			   = (1 << 4),  // Toggled when a Spy is invisible.
+	TFCond_Ubercharged		   = (1 << 5),  // Toggled when a player is uberCharged.
+	TFCond_TeleportedGlow		= (1 << 6),  // Toggled when someone leaves a teleporter and has glow beneath their feet.
+	TFCond_Taunting			  = (1 << 7),  // Toggled when a player is taunting.
+	TFCond_UberchargeFading	= (1 << 8),  // Toggled when the uberCharge is fading.
+	TFCond_CloakFlicker		  = (1 << 9),  // Toggled when a Spy is visible during cloak.
+	TFCond_Teleporting		   = (1 << 10), // Only activates for a brief second when the player is being teleported; not very useful.
+	TFCond_Kritzkrieged		  = (1 << 11), // Toggled when a player is being crit buffed by the KritzKrieg.
+	TFCond_TmpDamageBonus		= (1 << 12), // Unknown what this is for. Name taken from the AlliedModders SDK.
+	TFCond_DeadRingered		  = (1 << 13), // Toggled when a player is taking reduced damage from the Deadringer.
+	TFCond_Bonked				= (1 << 14), // Toggled when a player is under the effects of The Bonk! Atomic Punch.
+	TFCond_Stunned			   = (1 << 15), // Toggled when a player's speed is reduced from airblast or a Sandman ball.
+	TFCond_Buffed				= (1 << 16), // Toggled when a player is within range of an activated Buff Banner.
+	TFCond_Charging			  = (1 << 17), // Toggled when a Demoman charges with the shield.
+	TFCond_DemoBuff			  = (1 << 18), // Toggled when a Demoman has heads from the Eyelander.
+	TFCond_CritCola			  = (1 << 19), // Toggled when the player is under the effect of The Crit-a-Cola.
+	TFCond_InHealRadius		  = (1 << 20), // Unused condition, name taken from AlliedModders SDK.
+	TFCond_Healing			   = (1 << 21), // Toggled when someone is being healed by a medic or a dispenser.
+	TFCond_OnFire				= (1 << 22), // Toggled when a player is on fire.
+	TFCond_Overhealed			= (1 << 23), // Toggled when a player has >100% health.
+	TFCond_Jarated			   = (1 << 24), // Toggled when a player is hit with a Sniper's Jarate.
+	TFCond_Bleeding			  = (1 << 25), // Toggled when a player is taking bleeding damage.
+	TFCond_DefenseBuffed		 = (1 << 26), // Toggled when a player is within range of an activated Battalion's Backup.
+	TFCond_Milked				= (1 << 27), // Player was hit with a jar of Mad Milk.
+	TFCond_MegaHeal			  = (1 << 28), // Player is under the effect of Quick-Fix charge.
+	TFCond_RegenBuffed		   = (1 << 29), // Toggled when a player is within a Concheror's range.
+	TFCond_MarkedForDeath		= (1 << 30), // Player is marked for death by a Fan O'War hit. Effects are similar to TFCond_Jarated.
+	TFCond_NoHealingDamageBuff = (1 << 31), // Unknown what this is used for.
 
 	TFCond_MiniCrits	= (TFCond_Buffed | TFCond_CritCola),
 	TFCond_IgnoreStates = (TFCond_Ubercharged | TFCond_Bonked),
 };
 enum tf_cond_ex : int
 {
-	TFCondEx_SpeedBuffAlly			 = (1 << 0),  //Toggled when a player gets hit with the disciplinary action.
-	TFCondEx_HalloweenCritCandy		= (1 << 1),  //Only for Scream Fortress event maps that drop crit candy.
-	TFCondEx_CritCanteen			   = (1 << 2),  //Player is getting a crit boost from a MVM canteen.
-	TFCondEx_CritDemoCharge			= (1 << 3),  //From demo's shield
-	TFCondEx_CritHype				  = (1 << 4),  //Soda Popper crits.
-	TFCondEx_CritOnFirstBlood		  = (1 << 5),  //Arena first blood crit buff.
-	TFCondEx_CritOnWin				 = (1 << 6),  //End of round crits.
-	TFCondEx_CritOnFlagCapture		 = (1 << 7),  //CTF intelligence capture crits.
-	TFCondEx_CritOnKill				= (1 << 8),  //Unknown what this is for.
-	TFCondEx_RestrictToMelee		   = (1 << 9),  //Unknown what this is for.
-	TFCondEx_DefenseBuffNoCritBlock = (1 << 10), //MvM Buff.
-	TFCondEx_Reprogrammed			  = (1 << 11), //MvM Bot has been reprogrammed.
-	TFCondEx_PyroCrits				 = (1 << 12), //Player is getting crits from the Mmmph charge.
-	TFCondEx_PyroHeal				  = (1 << 13), //Player is being healed from the Mmmph charge.
-	TFCondEx_FocusBuff				 = (1 << 14), //Player is getting a focus buff.
-	TFCondEx_DisguisedRemoved		  = (1 << 15), //Disguised remove from a bot.
-	TFCondEx_MarkedForDeathSilent   = (1 << 16), //Player is under the effects of the Escape Plan/Equalizer or GRU.
-	TFCondEx_DisguisedAsDispenser   = (1 << 17), //Bot is disguised as dispenser.
-	TFCondEx_Sapped					= (1 << 18), //MvM bot is being sapped.
-	TFCondEx_UberchargedHidden		 = (1 << 19), //MvM Related
-	TFCondEx_UberchargedCanteen		= (1 << 20), //Player is receiving uberCharge from a canteen.
-	TFCondEx_HalloweenBombHead		 = (1 << 21), //Player has a bomb on their head from Merasmus.
-	TFCondEx_HalloweenThriller		 = (1 << 22), //Players are forced to dance from Merasmus.
-	TFCondEx_BulletCharge			  = (1 << 26), //Player is receiving 75% reduced damage from bullets.
-	TFCondEx_ExplosiveCharge		   = (1 << 27), //Player is receiving 75% reduced damage from explosives.
-	TFCondEx_FireCharge				= (1 << 28), //Player is receiving 75% reduced damage from fire.
-	TFCondEx_BulletResistance		  = (1 << 29), //Player is receiving 10% reduced damage from bullets.
-	TFCondEx_ExplosiveResistance	= (1 << 30), //Player is receiving 10% reduced damage from explosives.
-	TFCondEx_FireResistance			= (1 << 31), //Player is receiving 10% reduced damage from fire.
+	TFCondEx_SpeedBuffAlly			 = (1 << 0),  // Toggled when a player gets hit with the disciplinary action.
+	TFCondEx_HalloweenCritCandy		= (1 << 1),  // Only for Scream Fortress event maps that drop crit candy.
+	TFCondEx_CritCanteen			   = (1 << 2),  // Player is getting a crit boost from a MVM canteen.
+	TFCondEx_CritDemoCharge			= (1 << 3),  // From demo's shield
+	TFCondEx_CritHype				  = (1 << 4),  // Soda Popper crits.
+	TFCondEx_CritOnFirstBlood		  = (1 << 5),  // Arena first blood crit buff.
+	TFCondEx_CritOnWin				 = (1 << 6),  // End of round crits.
+	TFCondEx_CritOnFlagCapture		 = (1 << 7),  // CTF intelligence capture crits.
+	TFCondEx_CritOnKill				= (1 << 8),  // Unknown what this is for.
+	TFCondEx_RestrictToMelee		   = (1 << 9),  // Unknown what this is for.
+	TFCondEx_DefenseBuffNoCritBlock = (1 << 10), // MvM Buff.
+	TFCondEx_Reprogrammed			  = (1 << 11), // MvM Bot has been reprogrammed.
+	TFCondEx_PyroCrits				 = (1 << 12), // Player is getting crits from the Mmmph charge.
+	TFCondEx_PyroHeal				  = (1 << 13), // Player is being healed from the Mmmph charge.
+	TFCondEx_FocusBuff				 = (1 << 14), // Player is getting a focus buff.
+	TFCondEx_DisguisedRemoved		  = (1 << 15), // Disguised remove from a bot.
+	TFCondEx_MarkedForDeathSilent   = (1 << 16), // Player is under the effects of the Escape Plan/Equalizer or GRU.
+	TFCondEx_DisguisedAsDispenser   = (1 << 17), // Bot is disguised as dispenser.
+	TFCondEx_Sapped					= (1 << 18), // MvM bot is being sapped.
+	TFCondEx_UberchargedHidden		 = (1 << 19), // MvM Related
+	TFCondEx_UberchargedCanteen		= (1 << 20), // Player is receiving uberCharge from a canteen.
+	TFCondEx_HalloweenBombHead		 = (1 << 21), // Player has a bomb on their head from Merasmus.
+	TFCondEx_HalloweenThriller		 = (1 << 22), // Players are forced to dance from Merasmus.
+	TFCondEx_BulletCharge			  = (1 << 26), // Player is receiving 75% reduced damage from bullets.
+	TFCondEx_ExplosiveCharge		   = (1 << 27), // Player is receiving 75% reduced damage from explosives.
+	TFCondEx_FireCharge				= (1 << 28), // Player is receiving 75% reduced damage from fire.
+	TFCondEx_BulletResistance		  = (1 << 29), // Player is receiving 10% reduced damage from bullets.
+	TFCondEx_ExplosiveResistance	= (1 << 30), // Player is receiving 10% reduced damage from explosives.
+	TFCondEx_FireResistance			= (1 << 31), // Player is receiving 10% reduced damage from fire.
 
 	TFCondEx_IgnoreStates = (TFCondEx_PyroHeal)
 };
@@ -728,28 +844,80 @@ enum tf_cond_ex2 : int
 	TFCondEx2_FireImmune			   = (1 << 5),
 	TFCondEx2_PreventDeath			 = (1 << 6),
 	TFCondEx2_MVMBotRadiowave		  = (1 << 7),
-	TFCondEx2_HalloweenSpeedBoost   = (1 << 8),  //Wheel has granted player speed boost.
-	TFCondEx2_HalloweenQuickHeal	= (1 << 9),  //Wheel has granted player quick heal.
-	TFCondEx2_HalloweenGiant		   = (1 << 10), //Wheel has granted player giant mode.
-	TFCondEx2_HalloweenTiny			= (1 << 11), //Wheel has granted player tiny mode.
-	TFCondEx2_HalloweenInHell		  = (1 << 12), //Wheel has granted player in hell mode.
-	TFCondEx2_HalloweenGhostMode	= (1 << 13), //Wheel has granted player ghost mode.
-	TFCondEx2_Parachute				= (1 << 16), //Player has deployed the BASE Jumper.
-	TFCondEx2_BlastJumping			 = (1 << 17), //Player has sticky or rocket jumped.
+	TFCondEx2_HalloweenSpeedBoost   = (1 << 8),  // Wheel has granted player speed boost.
+	TFCondEx2_HalloweenQuickHeal	= (1 << 9),  // Wheel has granted player quick heal.
+	TFCondEx2_HalloweenGiant		   = (1 << 10), // Wheel has granted player giant mode.
+	TFCondEx2_HalloweenTiny			= (1 << 11), // Wheel has granted player tiny mode.
+	TFCondEx2_HalloweenInHell		  = (1 << 12), // Wheel has granted player in hell mode.
+	TFCondEx2_HalloweenGhostMode	= (1 << 13), // Wheel has granted player ghost mode.
+	TFCondEx2_Parachute				= (1 << 16), // Player has deployed the BASE Jumper.
+	TFCondEx2_BlastJumping			 = (1 << 17), // Player has sticky or rocket jumped.
+	TFCondEx2_BumperCar = (1 << 18),
+	TFCondEx2_83 = (1 << 19),
+	TFCondEx2_84 = (1 << 20),
+	TFCondEx2_85 = (1 << 21),
+	TFCondEx2_86 = (1 << 22),
+	TFCondEx2_87 = (1 << 23),
+	TFCondEx2_88 = (1 << 24),
+	TFCondEx2_89 = (1 << 25),
+	TFCondEx2_90 = (1 << 26),
+	TFCondEx2_91 = (1 << 27),
+	TFCondEx2_92 = (1 << 28),
+	TFCondEx2_93 = (1 << 29),
+	TFCondEx2_94 = (1 << 30),
+	TFCondEx2_95 = (1 << 31),
+};
+enum tf_cond_ex3 : int
+{
+	TFCondEx2_96 = (1 << 0),
+	TFCondEx2_97 = (1 << 1),
+	TFCondEx2_98 = (1 << 2),
+	TFCondEx2_99 = (1 << 3),
+	TFCondEx2_100 = (1 << 4),
+	TFCondEx2_101 = (1 << 5),
+	TFCondEx2_102 = (1 << 6),
+	TFCondEx2_103 = (1 << 7),
+	TFCondEx2_104 = (1 << 8),
+	TFCondEx2_105 = (1 << 9),
+	TFCondEx2_106 = (1 << 10),
+	TFCondEx2_107 = (1 << 11),
+	TFCondEx2_108 = (1 << 12),
+	TFCondEx2_109 = (1 << 13),
+	TFCondEx2_110 = (1 << 14),
+	TFCondEx2_111 = (1 << 15),
+	TFCondEx2_112 = (1 << 16),
+	TFCondEx2_113 = (1 << 17),
+	TFCondEx2_114 = (1 << 18), // team glow
+	TFCondEx2_115 = (1 << 19),
+	/*
+	TFCondEx2_116 = (1 << 20),
+	TFCondEx2_117= (1 << 21),
+	TFCondEx2_118 = (1 << 22),
+	TFCondEx2_119 = (1 << 23),
+	TFCondEx2_12 = (1 << 24),
+	TFCondEx2_12 = (1 << 25),
+	TFCondEx2_12 = (1 << 26),
+	TFCondEx2_12 = (1 << 27),
+	TFCondEx2_12 = (1 << 28),
+	TFCondEx2_12 = (1 << 29),
+	TFCondEx2_12 = (1 << 30),
+	TFCondEx2_12 = (1 << 31),
+	*/
 };
 //===================================================================================================
-enum tf_classes
-{
-	TF2_Scout	= 1,
-	TF2_Sniper   = 2,
-	TF2_Soldier  = 3,
-	TF2_Demoman  = 4,
-	TF2_Medic	= 5,
-	TF2_Heavy	= 6,
-	TF2_Pyro	 = 7,
-	TF2_Spy	  = 8,
-	TF2_Engineer = 9,
-};
+//enum tf_classes
+//{
+//	TF2_Scout	= 1,
+//	TF2_Sniper   = 2,
+//	TF2_Soldier  = 3,
+//	TF2_Demoman  = 4,
+//	TF2_Medic	= 5,
+//	TF2_Heavy	= 6,
+//	TF2_Pyro	 = 7,
+//	TF2_Spy	  = 8,
+//	TF2_Engineer = 9,
+//};
+BETTER_ENUM(tf_classes, int, TF2_Invalid, TF2_Scout, TF2_Sniper, TF2_Soldier, TF2_Demoman, TF2_Medic, TF2_Heavy, TF2_Pyro, TF2_Spy, TF2_Engineer)
 //===================================================================================================
 enum source_lifestates
 {
@@ -934,6 +1102,7 @@ public:
 	// get the current cmd
 	CUserCmd *GetUserCmd(int seq)
 	{
+		// call the original one, which will  then call the hooked one
 		typedef CUserCmd *(__thiscall * OriginalFn)(PVOID, int);
 		return getvfunc<OriginalFn>(this, 8)(this, seq);
 	}
@@ -942,16 +1111,16 @@ public:
 class CSteamInterfaces
 {
 public:
-	//ISteamClient017 	*client;
+	// ISteamClient017 	*client;
 	nn_interface<ISteamClient017 *> client;
 
-	//ISteamFriends002 	*friends;
+	// ISteamFriends002 	*friends;
 	nn_interface<ISteamFriends002 *> friends;
 
-	//ISteamUser017 	*user;
+	// ISteamUser017 	*user;
 	nn_interface<ISteamUser017 *> user;
 
-	//ISteamUserStats011 *userStats;
+	// ISteamUserStats011 *userStats;
 	nn_interface<ISteamUserStats011 *> userStats;
 
 	nn_interface<ISteamApps006 *> steamApps;
@@ -960,52 +1129,64 @@ public:
 class CInterfaces
 {
 public:
-	//CEntList 				*EntList;
+	// CEntList 				*EntList;
 	nn_interface<CEntList *> EntList;
 
-	//EngineClient 			*Engine;
+	// EngineClient 			*Engine;
 	nn_interface<EngineClient *> Engine;
 
-	//IPanel 			*Panels;
+	// IPanel 			*Panels;
 	nn_interface<IPanel *> Panels;
 
-	//ISurface 				*Surface;
+	// ISurface 				*Surface;
 	nn_interface<ISurface *> Surface;
 
-	//ClientModeShared 		*ClientMode;
+	// ClientModeShared 		*ClientMode;
 	nn_interface<ClientModeShared *> ClientMode;
 
-	//CHLClient 				*Client;
+	// CHLClient 				*Client;
 	nn_interface<CHLClient *> Client;
 
-	//ICvar 					*Cvar;
+	// ICvar 					*Cvar;
 	nn_interface<ICvar *> Cvar;
 
-	//CEngineTrace 			*EngineTrace;
+	// CEngineTrace 			*EngineTrace;
 	nn_interface<CEngineTrace *> EngineTrace;
 
-	//CModelInfo 				*ModelInfo;
+	// CModelInfo 				*ModelInfo;
 	nn_interface<CModelInfo *> ModelInfo;
 
-	//CInput 					*Input;
+	// CInput 					*Input;
 	nn_interface<CInput *> Input;
 
 	CSteamInterfaces steam;
 
-	//CGlobals 				*Globals;
+	// CGlobals 				*Globals;
 	nn_interface<CGlobals *> Globals;
 
-	//CUniformRandomStream 	*RandomStream;
+	// CUniformRandomStream 	*RandomStream;
 	nn_interface<CUniformRandomStream *> RandomStream;
 
-	//CPrediction 			*Prediction;
+	// CPrediction 			*Prediction;
 	nn_interface<CPrediction *> Prediction;
 
-	//IMoveHelper 			*MoveHelper;
+	// IMoveHelper 			*MoveHelper;
 	nn_interface<IMoveHelper *> MoveHelper;
 
-	//CPlayerResource			*GameResource;
+	// CPlayerResource			*GameResource;
 	nn_interface<CPlayerResource *> GameResource;
+
+	nn_interface<IGameEventManager2 *> EventManager;
+
+	nn_interface<PVOID> FileSystem;
+
+	nn_interface<IGameMovement *> GameMovement;
+
+	nn_interface<CMoveData *> MoveData;
+
+	nn_interface<IVDebugOverlay *> DebugOverlay;
+
+	nn_interface<IPhysicsSurfaceProps *> PhysicsSurfaceProps;
 
 	HMODULE thisDll;
 };
@@ -1018,7 +1199,7 @@ typedef struct predictedVars_s
 //===================================================================================================
 typedef struct playerVars_s
 {
-	tf_classes Class;
+	tf_classes Class = tf_classes::_from_integral(0);
 	int cond;
 	int condEx;
 	int health;
@@ -1026,7 +1207,11 @@ typedef struct playerVars_s
 	classId activeWeapon;
 	int cmdNum;
 	float flNextAttack;
+	std::string name; // update this when we change it - gets set every tick
+	player_info_t info;
 	predictedVars_t pred;
+	Vector viewOffset;
+	int flags;
 } playerVars_t;
 //===================================================================================================
 extern CInterfaces gInts;

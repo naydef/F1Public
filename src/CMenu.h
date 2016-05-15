@@ -13,20 +13,17 @@ class CMenu
 
 	//MenuType currType;
 
-	inline void closeSwitch(vecVars &vv)
+	inline int GetMenuHeight(int height)
 	{
-		for(auto &v : vv.vars)
+		int inc;
+		for(auto &h : hacks)
 		{
-			// if there is an open switch
-			if(v.getType() == type_t::Switch && v.bGet())
+			if(!h->variables.empty())
 			{
-				// see if there are any open switches in that
-				closeSwitch(v.vars);
-
-				// close this current switch
-				v.bVal = false;
+				inc += height;
 			}
 		}
+		return inc;
 	}
 
 public:
@@ -49,6 +46,7 @@ public:
 	}
 
 	std::vector<IHack *> hacks; // TODO refactor later
+	//std::vector<int> skipped;
 	int iIndex;					// current hack vector index
 	//int iiIndex;				// inside i index
 	bool bMenuActive;			// menu active

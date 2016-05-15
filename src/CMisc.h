@@ -2,13 +2,16 @@
 
 #include "IHack.h"
 
-class CBunnyHop : public IHack
+class CMisc : public IHack
 {
-	var bunny_bool = var("Bunny hop", type_t::Bool);
-	var taunt_bool = var("Taunt slide", type_t::Bool);
+	bool bunnyhop;
+	bool tauntsilde;
+
+	var bunny_bool{"Bunny hop", &bunnyhop};
+	var taunt_bool{"Taunt slide", &tauntsilde};
 
 public:
-	CBunnyHop()
+	CMisc()
 	{
 		variables.push_back(bunny_bool);
 		variables.push_back(taunt_bool);

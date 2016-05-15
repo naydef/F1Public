@@ -7,6 +7,13 @@
 //#define DEG2RAD(x) x
 #define RAD2DEG( x ) ( (float)( x ) * (float)( 180.0f / (float)( PI ) ) )
 
+//enum
+//{
+//	PITCH,
+//	YAW,
+//	ROLL,
+//};
+
 class Vector
 {
 public:

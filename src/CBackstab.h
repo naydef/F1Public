@@ -7,7 +7,8 @@ class CBaseCombatWeapon;
 
 class CBackstab : public IHack
 {
-	var enabled_bool = var("Enabled", type_t::Bool);
+	bool enabled;
+	var enabled_bool{"Enabled", &enabled};
 
 public:
 	CBackstab()

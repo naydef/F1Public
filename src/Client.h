@@ -4,6 +4,8 @@
 
 bool __fastcall Hooked_CreateMove(PVOID ClientMode, int edx, float input_sample_frametime, CUserCmd *pCommand);
 
+void __fastcall Hooked_CHLClient_CreateMove(PVOID CHLClient, int edx, int sequence_number, float input_sample_time, bool active);
+
 int __fastcall Hooked_Key_Event(PVOID CHLClient, int edx, int eventcode, ButtonCode_t keynum, const char *pszCurrentBinding);
 
 void __fastcall Hooked_RunCommand(IPrediction *pPred, int edx, CBaseEntity *player, CUserCmd *ucmd, IMoveHelper *moveHelper);

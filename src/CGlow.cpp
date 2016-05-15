@@ -11,45 +11,72 @@
 
 // these are some HORRIBLE MACROS
 // one of the worst things i have ever done
-#define REDCOLORFLOAT 0.490000f, 0.660000f, 0.770000f
-#define BLUCOLORFLOAT 0.740000f, 0.230000f, 0.230000f
+#define REDCOLORFLOAT 0.49f, 0.66f, 0.77f
+#define BLUCOLORFLOAT 0.74f, 0.23f, 0.23f
 
-/*
 Color healthToColor(int health, int maxHealth)
 {
 	int r = 0, g = 0, b = 0;
 
 	if(health > maxHealth)
 	{
-		b = health - maxHealth;
+		b		= health - maxHealth;
 		health = maxHealth;
 	}
 
 	int percent = (health / maxHealth) * 100;
 
+	// TODO use hsl or hsv and then convert it to rgba
+
 	r = 0 + percent * (255 - 0);
 	g = 255 + percent * (0 - 255);
-	//double resultBlue = color1.blue + percent * (color2.blue - color1.blue);
+	// double resultBlue = color1.blue + percent * (color2.blue - color1.blue);
 
 	return Color{r, g, b, 255};
 }
-*/
 
-int CGlow::registerGlowObject(CBaseEntity *ent, float r, float g, float b, float a, bool bRenderWhenOccluded, bool bRenderWhenUnoccluded, int nSplitScreenSlot)
+int CGlowManager::registerGlowObject(CBaseEntity *ent, float r, float g, float b, float a, bool bRenderWhenOccluded, bool bRenderWhenUnoccluded, int nSplitScreenSlot)
 {
 	// assumes the glow object is real
 
-	typedef int(__thiscall *registerFn)(CGlowManager *, CBaseEntity *, Vector &, float, bool, bool, int);
-	static DWORD dwFn = gSignatures.GetClientSignature("55 8B EC 51 53 56 8B F1 57 8B 5E 14");
-	static registerFn Register = (registerFn)dwFn;
+	//typedef int(__thiscall * registerFn)(CGlowManager *, CBaseEntity *, Vector &, float, bool, bool, int);
+	//static DWORD dwFn			= gSignatures.GetClientSignature("55 8B EC 51 53 56 8B F1 57 8B 5E 14");
+	//static registerFn Register = (registerFn)dwFn;
 
-	return Register(pGlowObjectManger, ent, Vector{r, g, b}, a, bRenderWhenOccluded, bRenderWhenUnoccluded, nSplitScreenSlot);
+	//return Register(pGlowObjectManger, ent, Vector{r, g, b}, a, bRenderWhenOccluded, bRenderWhenUnoccluded, nSplitScreenSlot);
+
+	int nIndex;
+	if(m_nFirstFreeSlot == GlowObjectDefinition_t::END_OF_FREE_LIST)
+	{
+		nIndex = glowObjects.AddToTail();
+	}
+	else
+	{
+		nIndex = m_nFirstFreeSlot;
+		m_nFirstFreeSlot = glowObjects[nIndex].m_nNextFreeSlot;
+	}
+
+	//glowObjects[nIndex].hEntity = ent;
+	glowObjects[nIndex].r = r;
+	glowObjects[nIndex].g = g;
+	glowObjects[nIndex].b = b;
+	glowObjects[nIndex].a = a;
+	glowObjects[nIndex].m_bRenderWhenOccluded = bRenderWhenOccluded;
+	glowObjects[nIndex].m_bRenderWhenUnoccluded = bRenderWhenUnoccluded;
+	glowObjects[nIndex].m_nSplitScreenSlot = nSplitScreenSlot;
+	glowObjects[nIndex].m_nNextFreeSlot = GlowObjectDefinition_t::ENTRY_IN_USE;
+
+	return nIndex;
 }
 
-const char *CGlow::name() const
+void CGlowManager::unregisterGlowObject(int glowIndex)
 {
-	return "Glow";
+	glowObjects[glowIndex].m_nNextFreeSlot = m_nFirstFreeSlot;
+	glowObjects[glowIndex].hEntity = NULL;
+	m_nFirstFreeSlot = glowIndex;
 }
+
+const char *CGlow::name() const { return "GLOW"; }
 
 bool CGlow::init()
 {
@@ -66,11 +93,11 @@ bool CGlow::paint()
 {
 	if(variables[2].bGet() || !variables[0].bGet())
 		return true;
-	
+
 	/*
 	for(auto &glowObj : pGlowObjectManger->glowObjects)
 	{
-		if(glowObj.hEntity != -1)
+		if(glowObj.hEntity != INVALID_EHANDLE_INDEX)
 		{
 			CEntity<> ent{HANDLE2INDEX(glowObj.hEntity)};
 
@@ -87,10 +114,11 @@ bool CGlow::paint()
 			//glowObj.b = c.b() / 255.0f; // blue
 			//glowObj.a = 1.0f; // 100% alpha
 
-			//Log::Console("team %d: %f %f %f", ent.get<int>(gEntVars.iTeam), glowObj.r, glowObj.g, glowObj.b);
+			Log::Console("team %d: %f %f %f", ent.get<int>(gEntVars.iTeam), glowObj.r, glowObj.g, glowObj.b);
 		}
 	}
 	*/
+
 	return true;
 }
 
@@ -115,7 +143,8 @@ bool CGlow::inEntityLoop(int index)
 	if(id == classId::CTFPlayer)
 	{
 		// no dormants or deads - included check for if glow is disabled here since we have to tell the engine to stop the glow rather than just ending the loop
-		if(player->IsDormant() || player.get<BYTE>(gEntVars.iLifeState) != LIFE_ALIVE || !variables[0].get<bool>() || (variables[1].get<bool>() && gLocalPlayerVars.team == player.get<int>(gEntVars.iTeam)))
+		if(player->IsDormant() || player.get<BYTE>(gEntVars.iLifeState) != LIFE_ALIVE || !enabled ||
+		   (teamColor && gLocalPlayerVars.team == player.get<int>(gEntVars.iTeam)))
 		{
 			player.set<bool>(gEntVars.bGlowEnabled, false);
 			player.castToPointer<CBaseCombatCharacter>()->DestroyGlowEffect();
@@ -134,27 +163,43 @@ bool CGlow::inEntityLoop(int index)
 		return true;
 	}
 	// TODO replace with entity traits when that is done
-	else if(id == classId::CObjectDispenser || id == classId::CObjectSentrygun || id == classId::CObjectTeleporter || id == classId::CBaseObject ||
-		id == classId::CTFProjectile_Arrow || id == classId::CTFProjectile_Cleaver || id == classId::CTFProjectile_Flare || id == classId::CTFProjectile_Rocket ||
-		id == classId::CTFProjectile_SentryRocket || id == classId::CTFGrenadePipebombProjectile)
-	{
-		int team = player.get<int>(gEntVars.iTeam);
-		// create a glow object for this entity
-		if(glowObjects[index] == false && (variables[1].get<bool>() && gLocalPlayerVars.team == team))
-		{
-			if(team == 3)
-			{
-				registerGlowObject(player.castToPointer<CBaseEntity>(), BLUCOLORFLOAT, 1.0f, true, false, 0);
-			}
-			else if(team == 2)
-			{
-				registerGlowObject(player.castToPointer<CBaseEntity>(), REDCOLORFLOAT, 1.0f, true, false, 0);
-			}
-			glowObjects[index] = true;
-		}
-		else if(player->IsDormant())
-			glowObjects[index] = false;
+	//else if(id == classId::CObjectDispenser || id == classId::CObjectSentrygun || id == classId::CObjectTeleporter || id == classId::CBaseObject /*||
+	//		id == classId::CTFProjectile_Arrow || id == classId::CTFProjectile_Cleaver || id == classId::CTFProjectile_Flare ||
+	//		id == classId::CTFProjectile_Rocket || id == classId::CTFProjectile_SentryRocket || id == classId::CTFGrenadePipebombProjectile*/)
+	//{
 
-	}
+	//	if(!enabled)
+	//	{
+	//		if(glowObjects[index] != -1 || player->IsDormant())
+	//		{
+	//			pGlowObjectManger->unregisterGlowObject(glowObjects[index]);
+	//			glowObjects[index] = -1;
+	//		}
+	//	}
+	//	else
+	//	{
+	//		int team = player.get<int>(gEntVars.iTeam);
+	//		// create a glow object for this entity
+	//		if(glowObjects[index] == -1 && (teamColor && gLocalPlayerVars.team == team))
+	//		{
+	//			if(team == 3)
+	//			{
+	//				glowObjects[index] = pGlowObjectManger->registerGlowObject(player.castToPointer<CBaseEntity>(), BLUCOLORFLOAT, 1.0f, true, true, -1);
+	//			}
+	//			else if(team == 2)
+	//			{
+	//				glowObjects[index] = pGlowObjectManger->registerGlowObject(player.castToPointer<CBaseEntity>(), REDCOLORFLOAT, 1.0f, true, true, -1);
+	//			}
+	//		}
+	//		else if(player->IsDormant())
+	//		{
+	//			if(glowObjects[index] != -1)
+	//			{
+	//				pGlowObjectManger->unregisterGlowObject(glowObjects[index]);
+	//				glowObjects[index] = -1;	
+	//			}
+	//		}
+	//	}
+	//}
 	return false;
 }

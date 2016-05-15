@@ -102,9 +102,10 @@
   <ItemGroup>
     <ClCompile Include="bf_buffer.cpp" />
     <ClCompile Include="CAimbot.cpp" />
+    <ClCompile Include="CAnnouncer.cpp" />
     <ClCompile Include="CAutoAirblast.cpp" />
     <ClCompile Include="CBackstab.cpp" />
-    <ClCompile Include="CBunnyHop.cpp" />
+    <ClCompile Include="CMisc.cpp" />
     <ClCompile Include="CDrawManager.cpp" />
     <ClCompile Include="CEsp.cpp" />
     <ClCompile Include="CHack.cpp" />
@@ -113,6 +114,8 @@
     <ClCompile Include="CGlobalVars.cpp" />
     <ClCompile Include="CMenu.cpp" />
     <ClCompile Include="CNoise.cpp" />
+    <ClCompile Include="CNospread.cpp" />
+    <ClCompile Include="CPureBypass.cpp" />
     <ClCompile Include="crc32.cpp" />
     <ClCompile Include="CTrigger.cpp" />
     <ClCompile Include="DLLMain.cpp" />
@@ -132,9 +135,10 @@
     <ClInclude Include="bitvec.h" />
     <ClInclude Include="bspflags.h" />
     <ClInclude Include="CAimbot.h" />
+    <ClInclude Include="CAnnouncer.h" />
     <ClInclude Include="CAutoAirblast.h" />
     <ClInclude Include="CBackstab.h" />
-    <ClInclude Include="CBunnyHop.h" />
+    <ClInclude Include="CMisc.h" />
     <ClInclude Include="CDrawManager.h" />
     <ClInclude Include="CEsp.h" />
     <ClInclude Include="CGlobalVars.h" />
@@ -144,15 +148,17 @@
     <ClInclude Include="Client.h" />
     <ClInclude Include="CMenu.h" />
     <ClInclude Include="CNoise.h" />
+    <ClInclude Include="CNospread.h" />
     <ClInclude Include="Color.h" />
     <ClInclude Include="CEntity.h" />
+    <ClInclude Include="CPureBypass.h" />
     <ClInclude Include="crc32.h" />
     <ClInclude Include="CTrigger.h" />
     <ClInclude Include="CUtlLinkedList.h" />
     <ClInclude Include="CUtlMemory.h" />
     <ClInclude Include="CUtlMemoryPool.h" />
     <ClInclude Include="CUtlVector.h" />
-    <ClInclude Include="event.h" />
+    <ClInclude Include="enum.h" />
     <ClInclude Include="factory.h" />
     <ClInclude Include="getvfunc.h" />
     <ClInclude Include="CGlow.h" />
@@ -161,6 +167,7 @@
     <ClInclude Include="keyval.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="Netvar.h" />
+    <ClInclude Include="network.h" />
     <ClInclude Include="notNullInterface.h" />
     <ClInclude Include="Panels.h" />
     <ClInclude Include="prediction.h" />

@@ -47,9 +47,6 @@
     <ClCompile Include="CTrigger.cpp">
       <Filter>Hack\modules\CTriggerBot</Filter>
     </ClCompile>
-    <ClCompile Include="CBunnyHop.cpp">
-      <Filter>Hack\modules\CBunnyHop</Filter>
-    </ClCompile>
     <ClCompile Include="CNoise.cpp">
       <Filter>Hack\modules\CNoise</Filter>
     </ClCompile>
@@ -70,6 +67,18 @@
     </ClCompile>
     <ClCompile Include="backtrace.cpp">
       <Filter>SDK\backtrace</Filter>
+    </ClCompile>
+    <ClCompile Include="CMisc.cpp">
+      <Filter>Hack\modules\CMisc</Filter>
+    </ClCompile>
+    <ClCompile Include="CAnnouncer.cpp">
+      <Filter>Hack\modules\CAnnouncer</Filter>
+    </ClCompile>
+    <ClCompile Include="CNospread.cpp">
+      <Filter>Hack\modules\CNospread</Filter>
+    </ClCompile>
+    <ClCompile Include="CPureBypass.cpp">
+      <Filter>Hack\modules\CPureBypass</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -142,9 +151,6 @@
     <ClInclude Include="CTrigger.h">
       <Filter>Hack\modules\CTriggerBot</Filter>
     </ClInclude>
-    <ClInclude Include="CBunnyHop.h">
-      <Filter>Hack\modules\CBunnyHop</Filter>
-    </ClInclude>
     <ClInclude Include="CNoise.h">
       <Filter>Hack\modules\CNoise</Filter>
     </ClInclude>
@@ -199,9 +205,6 @@
     <ClInclude Include="CUtlMemoryPool.h">
       <Filter>SDK\Source\Utl stuff</Filter>
     </ClInclude>
-    <ClInclude Include="event.h">
-      <Filter>SDK\Source</Filter>
-    </ClInclude>
     <ClInclude Include="CUtlLinkedList.h">
       <Filter>SDK\Source\Utl stuff</Filter>
     </ClInclude>
@@ -219,6 +222,24 @@
     </ClInclude>
     <ClInclude Include="backtrace.h">
       <Filter>SDK\backtrace</Filter>
+    </ClInclude>
+    <ClInclude Include="network.h">
+      <Filter>SDK\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="CMisc.h">
+      <Filter>Hack\modules\CMisc</Filter>
+    </ClInclude>
+    <ClInclude Include="enum.h">
+      <Filter>SDK</Filter>
+    </ClInclude>
+    <ClInclude Include="CAnnouncer.h">
+      <Filter>Hack\modules\CAnnouncer</Filter>
+    </ClInclude>
+    <ClInclude Include="CNospread.h">
+      <Filter>Hack\modules\CNospread</Filter>
+    </ClInclude>
+    <ClInclude Include="CPureBypass.h">
+      <Filter>Hack\modules\CPureBypass</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -294,9 +315,6 @@
     <Filter Include="Hack\modules\CEsp">
       <UniqueIdentifier>{ec7e7ad0-0b54-4842-ad44-37dcbad4c201}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Hack\modules\CBunnyHop">
-      <UniqueIdentifier>{aed79d63-dc21-42aa-b4e5-beb5a3ac1e32}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Hack\modules\CAutoBackstab">
       <UniqueIdentifier>{530cd05c-b8d9-4428-9f9f-c69e2229a6d1}</UniqueIdentifier>
     </Filter>
@@ -320,6 +338,18 @@
     </Filter>
     <Filter Include="SDK\backtrace">
       <UniqueIdentifier>{2b9c3a22-bee8-4704-9249-74043fc5dc70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hack\modules\CMisc">
+      <UniqueIdentifier>{aed79d63-dc21-42aa-b4e5-beb5a3ac1e32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hack\modules\CAnnouncer">
+      <UniqueIdentifier>{69ec9757-87ed-43af-bfba-2d7e6037ed0a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hack\modules\CNospread">
+      <UniqueIdentifier>{8d227e38-560d-4a87-a402-aba67843bd79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Hack\modules\CPureBypass">
+      <UniqueIdentifier>{1a01d02f-fb7f-4691-8a45-3f28772b6561}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -7,19 +7,20 @@
 
 class CTrigger : public IHack
 {
-	var enabled_bool = var("Enabled", type_t::Bool);
-	var hitAll_bool = var("Hit all", type_t::Bool);
-	var hitbox_bool = var("Hitbox?", type_t::Bool);
-	var hitbox_int = var("Hitbox Number", type_t::Int);
-	var hitgroup_int = var("Hitgroup Number", type_t::Int);
-	var zoomed_bool = var("Zoomed Only", type_t::Bool);
+
+	bool enabled, hitAll, useHitbox, zoomedOnly;
+	int hitbox, hitgroup;
+
+	var enabled_bool{"Enabled", &enabled};
+	var hitAll_bool{"Hit all", &hitAll};
+	var hitbox_bool{"Hitbox?", &useHitbox};
+	var hitbox_int{"Hitbox Number", &hitgroup, 0, 17, 1, 0};
+	var hitgroup_int{"Hitgroup Number", &hitgroup, 0, 7, 1, 0};
+	var zoomed_bool{"Zoomed Only", &zoomedOnly};
 
 public:
 	CTrigger()
 	{
-		hitbox_int.init(0, 17, 1, 0);
-		hitgroup_int.init(0, 7, 1, 0);
-
 		variables.push_back(enabled_bool);
 		variables.push_back(hitAll_bool);
 		variables.push_back(hitbox_bool);
@@ -33,9 +34,9 @@ public:
 	bool move(CUserCmd *) override;
 
 private:
-	//Vector curr_angles, curr_direction, curr_ray, curr_endpos, curr_pos;
+	// Vector curr_angles, curr_direction, curr_ray, curr_endpos, curr_pos;
 
-	//int curr_hitbox, curr_hitgroup, curr_physicsbone, curr_class_id;
+	// int curr_hitbox, curr_hitgroup, curr_physicsbone, curr_class_id;
 
-	//bool curr_ent_null;
+	// bool curr_ent_null;
 };

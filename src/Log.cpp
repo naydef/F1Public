@@ -8,39 +8,39 @@ void Log::Init(HMODULE hModule)
 {
 	memset(g_logFile, 0, sizeof(g_logFile));
 
-	if(GetModuleFileNameA(hModule, g_logFile, MAX_PATH) != 0)
-	{
-		size_t slash = -1;
+	//if(GetModuleFileNameA(hModule, g_logFile, MAX_PATH) != 0)
+	//{
+	//	size_t slash = -1;
 
-		for(size_t i = 0; i < strlen(g_logFile); i++)
-		{
-			if(g_logFile[i] == '/' || g_logFile[i] == '\\')
-			{
-				slash = i;
-			}
-		}
+	//	for(size_t i = 0; i < strlen(g_logFile); i++)
+	//	{
+	//		if(g_logFile[i] == '/' || g_logFile[i] == '\\')
+	//		{
+	//			slash = i;
+	//		}
+	//	}
 
-		if(slash != -1)
-		{
-			g_logFile[slash + 1] = '\0';
-			strcpy_s(g_debugLogFile, g_logFile);
-			strcat_s(g_debugLogFile, "debug.log");
-			strcat_s(g_logFile, "hook.log");
-		}
-		else
-		{
-			// Shitty manual mapper detected.
-			MessageBoxA(NULL, "Unable to parse target module path", "ERROR", MB_OK);
-			ExitProcess(0);
-		}
-	}
-	else
+	//	if(slash != -1)
+	//	{
+	//		g_logFile[slash + 1] = '\0';
+	//		strcpy_s(g_debugLogFile, g_logFile);
+	//		strcat_s(g_debugLogFile, "debug.log");
+	//		strcat_s(g_logFile, "hook.log");
+	//	}
+	//	else
+	//	{
+	//		// Shitty manual mapper detected.
+	//		MessageBoxA(NULL, "Unable to parse target module path", "ERROR", MB_OK);
+	//		ExitProcess(0);
+	//	}
+	//}
+	//else
 	{
 		// Shitty manual mapper detected.
-		MessageBoxA(NULL, "GetModuleFileNameA failed\nUsing Fallback location!\nThis is not an error, just information!", "MESSAGE", MB_OK);
+		//MessageBoxA(NULL, "GetModuleFileNameA failed\nUsing Fallback location!\nThis is not an error, just information!", "MESSAGE", MB_OK);
 		//ExitProcess(0);
-		strcpy_s(g_logFile, "hook.log");
-		strcpy_s(g_debugLogFile, "debug.log");
+		strcpy_s(g_logFile, "f1PublicHook.log");
+		strcpy_s(g_debugLogFile, "f1PublicDebug.log");
 	}
 }
 

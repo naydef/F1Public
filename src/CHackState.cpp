@@ -81,6 +81,8 @@ void HState::init()
 
 		gInts.Prediction = ClientFactory.get<CPrediction *>("VClientPrediction001");
 
+		gInts.GameMovement = ClientFactory.get<IGameMovement *>("GameMovement001");
+
 		// == ENGINE ==
 		auto EngineFactory = srcFactory(GetProcAddress(gSignatures.GetModuleHandleSafe("engine.dll"), "CreateInterface"));
 
@@ -91,6 +93,10 @@ void HState::init()
 		gInts.EngineTrace = EngineFactory.get<CEngineTrace *>("EngineTraceClient003");
 
 		gInts.RandomStream = EngineFactory.get<CUniformRandomStream *>("VEngineRandom001");
+
+		gInts.EventManager = EngineFactory.get<IGameEventManager2 *>("GAMEEVENTSMANAGER002");
+
+		gInts.DebugOverlay = EngineFactory.get<IVDebugOverlay *>("VDebugOverlay003");
 
 		// == VGUI ==
 		auto VGUIFactory = srcFactory(GetProcAddress(gSignatures.GetModuleHandleSafe(XorString("vguimatsurface.dll")), XorString("CreateInterface")));
@@ -132,16 +138,17 @@ void HState::init()
 		VMTBaseManager *CHLClientHook = new VMTBaseManager(); // set up for chlclient.
 		CHLClientHook->Init(gInts.Client);
 		CHLClientHook->HookMethod(&Hooked_Key_Event, gOffsets.keyEvent); // hook in key event.
+		CHLClientHook->HookMethod(&Hooked_CHLClient_CreateMove, gOffsets.createMoveOffset);
 		CHLClientHook->Rehook();
 
 		DWORD dwInputPointer = (gSignatures.dwFindPattern((DWORD)CHLClientHook->GetMethod<DWORD>(gOffsets.createMoveOffset), ((DWORD)CHLClientHook->GetMethod<DWORD>(gOffsets.createMoveOffset)) + 0x100, "8B 0D")) + (0x2); //Find the pointer to CInput in CHLClient::CreateMove.
 		gInts.Input		  = **reinterpret_cast<CInput ***>(dwInputPointer);
 
 		// hook getusercmd from CInput
-		//VMTBaseManager *inputHook = new VMTBaseManager();
-		//inputHook->Init(gInts.Input);
-		//inputHook->HookMethod(&Hooked_GetUserCmd, gOffsets.getUserCmdOffset);
-		//inputHook->Rehook();
+		VMTBaseManager *inputHook = new VMTBaseManager();
+		inputHook->Init(gInts.Input);
+		inputHook->HookMethod(&Hooked_GetUserCmd, gOffsets.getUserCmdOffset);
+		inputHook->Rehook();
 
 		// update the status
 		HState::instance()->addStatus(hackStatus::baseInited);
